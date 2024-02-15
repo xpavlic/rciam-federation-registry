@@ -1,0 +1,1 @@
+UPDATE client_details SET external_id=${external_id}, client_description=${client_description}, client_name=${client_name}, protocol=${protocol} WHERE id=${id}

@@ -5,7 +5,7 @@ const select_own_service_2 = "') AS group_ids LEFT JOIN";
 const select_all_1 = "LEFT JOIN (SELECT id AS group_id,true AS owned,CASE WHEN group_manager IS NULL then false ELSE group_manager END FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='"
 const select_all_2 = "') AS group_ids";
 const outdated_disable_petitions = 'AND 0=1'
-const outdated_services = 'AND service_state.outdated = true'
+const outdated_filter = 'AND outdated = true'
 const request_review_filter = "AND status='request_review'"
 
 class ServiceListRepository {
@@ -33,7 +33,7 @@ class ServiceListRepository {
       select_own_petition:'',
       pending_filter:'',
       outdated_disable_petitions:'',
-      outdated_services:'',
+      outdated_filter:'',
       pending_sub_filter:'',
       orphan_filter_services:'',
       orphan_filter_petitions:'',
@@ -80,7 +80,7 @@ class ServiceListRepository {
 
     if(req.query.outdated){
       params.outdated_disable_petitions = outdated_disable_petitions;
-      params.outdated_services = outdated_services;
+      params.outdated_filter = outdated_filter;
     }
 
     if(req.query.protocol){

@@ -27,7 +27,7 @@ class ServiceStateRepository {
 
     let integration_environment_filter = "";
     if(integration_environment){
-      integration_environment_filter = " AND service_details.integration_environment='"+integration_environment+"'";
+      integration_environment_filter = " AND sd.integration_environment='"+integration_environment+"'";
     }
     return await this.db.any(sql.getOutdatedOwners,{tenant:tenant,integration_environment_filter:integration_environment_filter});
   }

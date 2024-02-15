@@ -1579,10 +1579,11 @@ function asyncPetitionValidation(req,res,next){
               next();
             }
             else{
-              if(petition.protocol!==req.body.protocol){
-                customLogger(req,res,'warn','Tried to edit protocol.');
-                return res.status(403).send({error:'Tried to edit protocol'});
-              }
+              //TODO PROTOCOL REMOVED
+              //if(petition.protocol!==req.body.protocol){
+              //  customLogger(req,res,'warn','Tried to edit protocol.');
+              //  return res.status(403).send({error:'Tried to edit protocol'});
+              //}
               if(petition.type==='create' && req.body.type!=='create'){
                 customLogger(req,res,'warn','Tried to edit registration type');
                 return res.status(403).send({error:'Tried to edit registration type'});

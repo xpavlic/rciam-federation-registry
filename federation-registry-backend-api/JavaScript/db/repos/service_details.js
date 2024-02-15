@@ -27,7 +27,7 @@ class ServiceDetailsRepository {
         requester: sub,
         group_id:data.group_id,
         country:data.country,
-        protocol:data.protocol,
+        protocol:data.protocol, //TODO REMOVE
         tenant:data.tenant,
         website_url:data.website_url,
         organization_id:data.organization_id,
@@ -60,7 +60,7 @@ class ServiceDetailsRepository {
           integration_environment:data.integration_environment,
           requester:sub,
           id:id,
-          protocol:data.protocol,
+          protocol:data.protocol, //TODO REMOVE
           website_url:data.website_url,
           aup_uri:data.aup_uri,
           organization_id:data.organization_id

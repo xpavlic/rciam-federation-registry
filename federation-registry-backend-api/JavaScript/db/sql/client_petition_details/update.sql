@@ -1,0 +1,1 @@
+UPDATE client_petition_details SET client_id=${client_id}, client_description=${client_description}, client_name=${client_name}, protocol=${protocol}, type=${type} WHERE id=${id}

@@ -22,18 +22,21 @@ module.exports = {
       update:sql('service_details/update.sql')
     },
     service_details_protocol:{
-      addOidc:sql('service_details_protocol/addOidc.sql'),
-      checkClientId:sql('service_details_protocol/checkClientId.sql'),
-      updateOidc:sql('service_details_protocol/updateOidc.sql'),
-      updateSaml:sql('service_details_protocol/updateSaml.sql'),
-      checkEntityId:sql('service_details_protocol/checkEntityId.sql'),
-      addSaml:sql('service_details_protocol/addSaml.sql')
+      addOidc:sql('client_details_protocol/addOidc.sql'),
+      checkClientId:sql('client_details_protocol/checkOidcClientId.sql'),
+      updateOidc:sql('client_details_protocol/updateOidc.sql'),
+      updateSaml:sql('client_details_protocol/updateSaml.sql'),
+      checkEntityId:sql('client_details_protocol/checkEntityId.sql'),
+      addSaml:sql('client_details_protocol/addSaml.sql')
     },
     service:{
       getAll:(sql('service/getAll.sql')),
       getService:sql('service/getService.sql'),
-      getPending:sql('service/getPending.sql'),
+      getPending:sql('service/getWithPendingClients.sql'),
       getContacts:sql('service/getContacts.sql')
+    },
+    client:{
+        getClient:(sql('client/getClient.sql'))
     },
     user_info:{
       add:sql('user_info/add.sql'),
