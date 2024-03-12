@@ -351,11 +351,11 @@ router.get('/ams/ams_verification_hash',(req,res)=>{
 })
 
 
-router.get('/tenants/:tenant/services/:id/error',authenticate,(req,res,next)=>{
+router.get('/tenants/:tenant/clients/:id/error',authenticate,(req,res,next)=>{
   try{
     if(req.user.role.actions.includes('view_errors')){
 
-      db.service_errors.getErrorByServiceId(req.params.id).then(response=>{
+      db.client_errors.getErrorByClientId(req.params.id).then(response=>{
         if(response){
           return res.status(200).json({error:response});
         }
@@ -371,7 +371,7 @@ router.get('/tenants/:tenant/services/:id/error',authenticate,(req,res,next)=>{
 });
 
 // Handle Deployment Error
-router.put('/tenants/:tenant/services/:id/deployment',authenticate,(req,res,next)=> {
+router.put('/tenants/:tenant/clients/:id/deployment',authenticate,(req,res,next)=> {
   try{
     if(req.user.role.actions.includes('error_action')){
       if(req.query.action==='resend'){
@@ -379,7 +379,7 @@ router.put('/tenants/:tenant/services/:id/deployment',authenticate,(req,res,next
               let done = await t.batch([
                 t.service_state.resend(req.params.id),
                 t.deployment_tasks.resolveAllTasks(req.params.id),
-                t.service_errors.archive(req.params.id),
+                t.client_errors.archive(req.params.id),
               ]).catch(err=>{next(err)});
               res.status(200).end();
         }).catch(err=>{next(err)})
@@ -612,7 +612,7 @@ router.get('/tenants/:tenant/services/list', getServiceListValidation(),validate
 router.get('/agent/get_new_configurations',amsAgentAuth,(req,res,next)=>{
 //router.get('/agent/get_new_configurations',(req,res,next)=>{
   try{
-    db.service.getPending().then(services=>{
+    db.service.getWithPendingClients().then(services=>{
       if(services){
         res.status(200).json({services});
       }
@@ -637,6 +637,7 @@ router.get('/tenants/:tenant/services/:id',authenticate,(req,res,next)=>{
             await t.service.get(req.params.id,req.params.tenant).then(async service=>{
               if(service){
                 await t.service_state.getState(req.params.id).then(async service_state=>{
+                  //TODO NEEDS REWRITE service_errors -> client_errors.getErrorsByClientId
                   await t.service_errors.getErrorByServiceId(req.params.id).then(service_error=>{
                     delete service_state.id;
                     res.status(200).json({service:service.service_data,owned:(exists?true:false),...service_state,error:service_error});
@@ -887,7 +888,7 @@ router.put('/tenants/:tenant/petitions/:id/review',authenticate,canReview,(req,r
 router.get('/tenants/:tenant/check-availability',(req,res,next)=>{
   db.tx('get-history-for-petition', async t =>{
     try{
-      await isAvailable(t,req.query.value,req.query.protocol,(req.query.petition_id&&typeof(parseInt(req.query.petition_id))==='number'?req.query.petition_id:0),(req.query.service_id&&typeof(parseInt(req.query.service_id))==='number'?req.query.service_id:0),req.params.tenant,req.query.environment).then(available =>{
+      await isAvailable(t,req.query.value,req.query.protocol,(req.query.client_petition_id&&typeof(parseInt(req.query.client_petition_id))==='number'?req.query.client_petition_id:0),(req.query.service_id&&typeof(parseInt(req.query.service_id))==='number'?req.query.service_id:0),req.params.tenant,req.query.environment).then(available =>{
             res.status(200).json({available:available});
       }).catch(err=>{next(err)});
     }
@@ -1488,13 +1489,13 @@ function checkCertificate(req,res,next) {
 }
 
 // Checking Availability of Client Id/Entity Id
-const isAvailable= async (t,id,protocol,petition_id,service_id,tenant,environment)=>{
+const isAvailable= async (t,id,protocol,client_petition_id,service_id,tenant,environment)=>{
   if(id){
     if(protocol==='oidc'){
-      return t.service_details_protocol.checkClientId(id,service_id,petition_id,tenant,environment);
+      return t.client_details_protocol.checkOidcClientId(id,service_id,client_petition_id,tenant,environment);
     }
     else if (protocol==='saml'){
-      return t.service_details_protocol.checkEntityId(id,service_id,petition_id,tenant,environment);
+      return t.client_details_protocol.checkEntityId(id,service_id,client_petition_id,tenant,environment);
     }
   }
   else {

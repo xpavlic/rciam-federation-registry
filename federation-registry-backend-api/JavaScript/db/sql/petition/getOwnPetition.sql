@@ -23,7 +23,7 @@ SELECT json_build_object('service_name' sd.service_name,
                          'contacts',
                                 (SELECT json_agg(json_build_object('email',v.value,'type',v.type))
                                 FROM service_petition_contacts v WHERE sd.id = v.owner_id),
-                         'client_petition_details',
+                         'client_petitions',
                                 (SELECT coalesce(json_agg(
                                             json_build_object(
                                                 'client_id', cpd.client_id,

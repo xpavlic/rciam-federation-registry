@@ -2,7 +2,12 @@ const promise = require('bluebird'); // best promise library today
 const pgPromise = require('pg-promise'); // pg-promise core library
 const dbConfig = require('../../db-config/db-config.json'); // db connection details
 const {Diagnostics} = require('./diagnostics'); // optional diagnostics
-const {ServiceContacts,ServiceDetailsProtocol,ServiceErrors,Invitation,Tenants,DeploymentTasks,ServiceState,Group,ServiceDetails,DeployerAgents,Tokens,User,UserInfo,UserRole,UserEduPersonEntitlement,ServiceMultiValued,ServicePetitionDetails,Service,Petition,ServiceList,Organizations, BannerAlerts, ServiceTags} = require('./repos');
+const {ServiceContacts,ClientDetailsProtocol,ClientErrors,Invitation,Tenants,DeploymentTasks,ServiceState,Group,ServiceDetails,DeployerAgents,Tokens,User,UserInfo,UserRole,UserEduPersonEntitlement,ServiceMultiValued,ServicePetitionDetails,Service,Petition,ServiceList,Organizations, BannerAlerts, ServiceTags,
+    ClientMultiValued,
+    ClientDetails,
+    ClientPetitionDetails,
+    ClientRepository
+} = require('./repos');
 const testdbConfig = require('../../db-config/test-db-config.json');
 const dockerTestdbConfig = require('../../db-config/docker-test-db-config.json');
 let config;
@@ -23,13 +28,17 @@ const initOptions = {
     extend(obj, dc) {
         // Database Context (dc) is mainly useful when extending multiple databases with different access API-s.
         obj.service_contacts = new ServiceContacts(obj,pgp);
-        obj.service_details_protocol = new ServiceDetailsProtocol(obj,pgp);
+        obj.client_details_protocol = new ClientDetailsProtocol(obj,pgp);
         obj.user_info = new UserInfo(obj,pgp);
         obj.service_details = new ServiceDetails(obj,pgp);
+        obj.client_details = new ClientDetails(obj,pgp);
         obj.user_edu_person_entitlement = new UserEduPersonEntitlement(obj,pgp);
         obj.service_multi_valued = new ServiceMultiValued(obj,pgp);
+        obj.client_multi_valued = new ClientMultiValued(obj,pgp);
+        obj.client_petition_details = new ClientPetitionDetails(obj,pgp);
         obj.service_petition_details = new ServicePetitionDetails(obj,pgp);
         obj.service = new Service(obj,pgp);
+        obj.client = new ClientRepository(obj,pgp);
         obj.service_state = new ServiceState(obj,pgp);
         obj.user = new User(obj,pgp);
         obj.petition = new Petition(obj,pgp);
@@ -37,7 +46,7 @@ const initOptions = {
         obj.user_role = new UserRole(obj,pgp);
         obj.tokens = new Tokens(obj,pgp);
         obj.group = new Group(obj,pgp);
-        obj.service_errors = new ServiceErrors(obj,pgp);
+        obj.client_errors = new ClientErrors(obj,pgp);
         obj.invitation = new Invitation(obj,pgp);
         obj.tenants = new Tenants(obj,pgp);
         obj.deployer_agents = new DeployerAgents(obj,pgp);

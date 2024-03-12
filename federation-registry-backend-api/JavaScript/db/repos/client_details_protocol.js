@@ -1,31 +1,31 @@
-const sql = require('../sql').service_details_protocol;
+const sql = require('../sql').client_details_protocol;
 
 let cs = {}; // Reusable ColumnSet objects.
 const petition = 'petition_';
-const service = '';
+const client = '';
 /*
  This repository mixes hard-coded and dynamic SQL, primarily to show a diverse example of using both.
  */
 
-class ServiceDetailsProtocolRepository {
+class ClientDetailsProtocolRepository {
     constructor(db, pgp) {
         this.db = db;
         this.pgp = pgp;
-        cs.client_id = new pgp.helpers.ColumnSet(['?id','client_id'],{table:'service_details_oidc'});
-        cs.add_multiple_oidc = new pgp.helpers.ColumnSet(['id','client_id','allow_introspection','code_challenge_method','device_code_validity_seconds','access_token_validity_seconds','refresh_token_validity_seconds','client_secret','reuse_refresh_token','clear_access_tokens_on_refresh','id_token_timeout_seconds', 'token_endpoint_auth_method', 'token_endpoint_auth_signing_alg', 'jwks', 'jwks_uri','application_type'],{table:'service_details_oidc'});
-        cs.add_multiple_saml = new pgp.helpers.ColumnSet(['id','entity_id','metadata_url'],{table:'service_details_saml'});
+        cs.oidc_client_id = new pgp.helpers.ColumnSet(['?id','oidc_client_id'],{table:'client_details_oidc'});
+        cs.add_multiple_oidc = new pgp.helpers.ColumnSet(['id','oidc_client_id','allow_introspection','code_challenge_method','device_code_validity_seconds','access_token_validity_seconds','refresh_token_validity_seconds','client_secret','reuse_refresh_token','clear_access_tokens_on_refresh','id_token_timeout_seconds', 'token_endpoint_auth_method', 'token_endpoint_auth_signing_alg', 'jwks', 'jwks_uri','application_type'],{table:'client_details_oidc'});
+        cs.add_multiple_saml = new pgp.helpers.ColumnSet(['id','entity_id','metadata_url'],{table:'client_details_saml'});
         // set-up all ColumnSet objects, if needed:
     }
 
-    async addMultiple(services){
+    async addMultiple(clients){
       let oidc = [];
       let saml = [];
-      services.forEach((service,index)=> {
-        if(service.protocol==='oidc'){
-          oidc.push(service);
+      clients.forEach((client,index)=> {
+        if(client.protocol==='oidc'){
+          oidc.push(client);
         }
         else{
-          saml.push(service);
+          saml.push(client);
         }
       });
       if(oidc.length>0){
@@ -40,11 +40,11 @@ class ServiceDetailsProtocolRepository {
       return true
     }
 
-    async checkClientId(client_id,service_id,petition_id,tenant,environment){
-      const query =  this.pgp.as.format(sql.checkClientId,{
+    async checkOidcClientId(oidc_client_id, client_id, client_petition_id, tenant, environment){
+      const query =  this.pgp.as.format(sql.checkOidcClientId,{
+        oidc_client_id:oidc_client_id,
         client_id:client_id,
-        service_id:service_id,
-        petition_id:petition_id,
+        client_petition_id:client_petition_id,
         tenant:tenant,
         environment:environment
       });
@@ -53,11 +53,11 @@ class ServiceDetailsProtocolRepository {
           if(result.length>0){return false}else{return true}
       })
     }
-    async checkEntityId(entity_id,service_id,petition_id,tenant,environment){
+    async checkEntityId(entity_id,client_id,client_petition_id,tenant,environment){
       return this.db.any(sql.checkEntityId,{
         entity_id:entity_id,
-        service_id:service_id,
-        petition_id:petition_id,
+        client_id:client_id,
+        client_petition_id:client_petition_id,
         tenant:tenant,
         environment:environment
       }).then(result =>{
@@ -66,9 +66,9 @@ class ServiceDetailsProtocolRepository {
     }
 
     // Data format
-    // updateData = [{id:1,client_id:value1},{id:2,client_id:value2},{id:3,client_id:value3}]
-    async updateClientId(updateData){
-      const update = this.pgp.helpers.update(updateData, cs.client_id) + ' WHERE v.id = t.id RETURNING t.id';
+    // updateData = [{id:1,oidc_client_id:value1},{id:2,oidc_client_id:value2},{id:3,oidc_client_id:value3}]
+    async updateOidcClientId(updateData){
+      const update = this.pgp.helpers.update(updateData, cs.oidc_client_id) + ' WHERE v.id = t.id RETURNING t.id';
       return this.db.any(update).then((ids)=>{
         if(ids.length===updateData.length){
           return true
@@ -88,13 +88,13 @@ class ServiceDetailsProtocolRepository {
           type = petition;
         }
         else {
-          type = service;
+          type = client;
         }
         if(data.protocol==='oidc'){
           return this.db.one(sql.addOidc,{
             reuse_refresh_token: data.reuse_refresh_token,
             allow_introspection: data.allow_introspection,
-            client_id: data.client_id,
+            oidc_client_id: data.oidc_client_id,
             client_secret: data.client_secret,
             token_endpoint_auth_method:data.token_endpoint_auth_method,
             token_endpoint_auth_signing_alg:data.token_endpoint_auth_signing_alg,
@@ -130,13 +130,13 @@ class ServiceDetailsProtocolRepository {
         type=petition;
       }
       else{
-        type=service;
+        type=client;
       }
       if(data.protocol==='oidc'){
         return this.db.none(sql.updateOidc,{
           reuse_refresh_token: data.reuse_refresh_token,
           allow_introspection: data.allow_introspection,
-          client_id: data.client_id,
+          oidc_client_id: data.oidc_client_id,
           client_secret: data.client_secret,
           token_endpoint_auth_method:data.token_endpoint_auth_method,
           token_endpoint_auth_signing_alg:data.token_endpoint_auth_signing_alg,
@@ -173,4 +173,4 @@ class ServiceDetailsProtocolRepository {
 
 
 
-module.exports = ServiceDetailsProtocolRepository;
+module.exports = ClientDetailsProtocolRepository;

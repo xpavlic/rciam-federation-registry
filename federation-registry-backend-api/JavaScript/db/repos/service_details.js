@@ -27,7 +27,6 @@ class ServiceDetailsRepository {
         requester: sub,
         group_id:data.group_id,
         country:data.country,
-        protocol:data.protocol, //TODO REMOVE
         tenant:data.tenant,
         website_url:data.website_url,
         organization_id:data.organization_id,
@@ -60,17 +59,23 @@ class ServiceDetailsRepository {
           integration_environment:data.integration_environment,
           requester:sub,
           id:id,
-          protocol:data.protocol, //TODO REMOVE
           website_url:data.website_url,
           aup_uri:data.aup_uri,
           organization_id:data.organization_id
         });
     }
 
-
-    async getProtocol(service_id,sub,tenant){
-      return this.db.oneOrNone("SELECT protocol FROM ((SELECT protocol,group_id,deleted,id FROM service_details WHERE id=$1 AND tenant=$3) as service_details LEFT JOIN service_state ON service_details.id=service_state.id AND (deleted=false OR (deleted=TRUE AND state!='deployed'))) as service LEFT JOIN (SELECT id AS group_id,sub FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub=$2) AS foo USING (group_id) WHERE sub IS NOT NULL",[+service_id,sub,tenant]);
+    async checkServiceExists(service_id, sub, tenant) {
+        if (this.db.oneOrNone("SELECT id FROM service_details WHERE id=$1 AND tenant=$3 AND deleted=false LEFT JOIN (SELECT id AS group_id,sub FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub=$2) AS foo USING (group_id) WHERE sub IS NOT NULL",[+service_id,sub,tenant])) {
+            return true;
+        } else {
+            return false;
+        }
     }
+    //TODO REMOVE
+    //async getProtocol(service_id,sub,tenant){
+    //  return this.db.oneOrNone("SELECT protocol FROM ((SELECT protocol,group_id,deleted,id FROM service_details WHERE id=$1 AND tenant=$3) as service_details LEFT JOIN service_state ON service_details.id=service_state.id AND (deleted=false OR (deleted=TRUE AND state!='deployed'))) as service LEFT JOIN (SELECT id AS group_id,sub FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub=$2) AS foo USING (group_id) WHERE sub IS NOT NULL",[+service_id,sub,tenant]);
+    //}
 
 
     async belongsToRequester(service_id,sub){
@@ -82,11 +87,16 @@ class ServiceDetailsRepository {
       }
     }
 
+    //TODO set set client_state for all clients to delete
     async delete(id){
       try {
         return this.db.tx('update-service',async t =>{
+          let client_ids = await t.client.getServiceClientIds(id);
           let queries = [];
-          queries.push(t.service_state.update(id,'pending','delete'));
+          if (client_ids) {
+              client_ids.forEach(queries.push(t.client_state.update(id, 'pending', 'delete')));
+          }
+          //TODO SERVICE DELETED = TRUE
           //queries.push(t.none('UPDATE service_details SET deleted=TRUE WHERE id=$1',+id));
           var result = await t.batch(queries);
           if(result){

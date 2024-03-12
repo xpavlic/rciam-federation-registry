@@ -21,9 +21,9 @@ module.exports = {
       add:sql('service_details/add.sql'),
       update:sql('service_details/update.sql')
     },
-    service_details_protocol:{
+    client_details_protocol:{
       addOidc:sql('client_details_protocol/addOidc.sql'),
-      checkClientId:sql('client_details_protocol/checkOidcClientId.sql'),
+      checkOidcClientId:sql('client_details_protocol/checkOidcClientId.sql'),
       updateOidc:sql('client_details_protocol/updateOidc.sql'),
       updateSaml:sql('client_details_protocol/updateSaml.sql'),
       checkEntityId:sql('client_details_protocol/checkEntityId.sql'),
@@ -32,7 +32,7 @@ module.exports = {
     service:{
       getAll:(sql('service/getAll.sql')),
       getService:sql('service/getService.sql'),
-      getPending:sql('service/getWithPendingClients.sql'),
+      getWithPendingClients:sql('service/getWithPendingClients.sql'),
       getContacts:sql('service/getContacts.sql')
     },
     client:{
@@ -48,6 +48,14 @@ module.exports = {
       getTicketInfo:sql('service_petition_details/getTicketInfo.sql'),
       canBeEditedByRequester:sql('service_petition_details/canBeEditedByRequester.sql'),
       belongsToRequester:sql('service_petition_details/belongsToRequester.sql')
+    },
+    client_petition_details:{
+        add:sql('client_petition_details/add.sql'),
+        update:sql('client_petition_details/update.sql'),
+    },
+    client_details:{
+        add:sql('client_details/add.sql'),
+        update:sql('client_details/update.sql'),
     },
     service_state:{
       add:sql('service_state/add.sql'),
@@ -68,7 +76,8 @@ module.exports = {
       canReviewOwn:sql('petition/canReviewOwn.sql'),
       getOldOwnPetition:sql('petition/getOldOwnPetition.sql'),
       getOldPetition:sql('petition/getOldPetition.sql'),
-      getLastStateId:sql('petition/getLastStateId.sql')
+      getLastStateId:sql('petition/getLastStateId.sql'),
+      getClientPetition:sql('petition/getClientPetition.sql')
     },
     service_list: {
       getList:sql('service_list/getList.sql')

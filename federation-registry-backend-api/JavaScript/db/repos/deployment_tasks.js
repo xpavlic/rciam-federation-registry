@@ -5,7 +5,7 @@ class DeploymentTasksRepository {
     this.db = db;
     this.pgp = pgp;
     // set-up all ColumnSet objects, if needed:
-     cs = new pgp.helpers.ColumnSet(['agent_id','service_id','deployer_name']);
+     cs = new pgp.helpers.ColumnSet(['agent_id','client_id','deployer_name']);
   }
 
   async setDeploymentTasks(postData){
@@ -23,19 +23,19 @@ class DeploymentTasksRepository {
     });
   }
 
-  async resolveTask(service_id,deployer_name){
-      return await this.db.oneOrNone('DELETE FROM deployment_tasks WHERE service_id=$1 AND deployer_name'+ (deployer_name?"='"+deployer_name+"'":' IS NULL ') + ' RETURNING *',[+service_id]).then(res=>{if(res){return true}else{return false}}).catch(err=>{ return false;});    
-      //return await this.db.oneOrNone('DELETE FROM deployment_tasks WHERE service_id=$1 RETURNING *',[+service_id]).catch(err=>{throw 'Task not found'});
+  async resolveTask(client_id,deployer_name){
+      return await this.db.oneOrNone('DELETE FROM deployment_tasks WHERE client_id=$1 AND deployer_name'+ (deployer_name?"='"+deployer_name+"'":' IS NULL ') + ' RETURNING *',[+client_id]).then(res=>{if(res){return true}else{return false}}).catch(err=>{ return false;});
+      //return await this.db.oneOrNone('DELETE FROM deployment_tasks WHERE client_id=$1 RETURNING *',[+client_id]).catch(err=>{throw 'Task not found'});
     
   }
 
-  async resolveAllTasks(service_id){
-    return await this.db.any('DELETE FROM deployment_tasks where service_id=$1',+service_id);
+  async resolveAllTasks(client_id){
+    return await this.db.any('DELETE FROM deployment_tasks where client_id=$1',+client_id);
   }
 
 
   async isDeploymentFinished(id){
-    return await this.db.any('SELECT * from deployment_tasks WHERE service_id=$1',+id).then(res =>{
+    return await this.db.any('SELECT * from deployment_tasks WHERE client_id=$1',+id).then(res =>{
       if(res){
         if(res.length>0){
           return false;

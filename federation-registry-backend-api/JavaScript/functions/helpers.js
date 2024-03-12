@@ -44,10 +44,14 @@ const sendMultipleInvitations = function (data,t) {
 
 
 
-const calcDiff = (oldState,newState,tenant) => {
-  
+const calcServiceDiff = (oldState, newState, tenant) => {
     var new_values = Object.assign({},newState);
     var old_values = Object.assign({},oldState);
+
+    // Exclude client_petitions field
+    delete new_values.client_petitions;
+    delete old_values.client_petitions;
+
     let new_cont = [];
     let old_cont = [];
     let items;
@@ -60,7 +64,7 @@ const calcDiff = (oldState,newState,tenant) => {
         service_boolean:{},
         requested_attributes:[]
       },
-      details:{}
+      details:{},
     };
 
     if(!old_values.contacts){
@@ -89,52 +93,6 @@ const calcDiff = (oldState,newState,tenant) => {
           edits.dlt.contacts[index] = {email:items[0],type:items[1]};
       })
     }
-    if(new_values.protocol==='oidc'){
-      if(!old_values.redirect_uris){
-        old_values.redirect_uris = [];
-      }
-      if(!new_values.redirect_uris){
-        new_values.redirect_uris = [];
-      }
-      if(!old_values.scope){
-        old_values.scope = [];
-      }
-      if(!new_values.scope){
-        new_values.scope = [];
-      }
-      if(!old_values.grant_types){
-        old_values.scope = [];
-      }
-      if(!new_values.grant_types){
-        new_values.scope = [];
-      }
-      if(!old_values.post_logout_redirect_uris){
-        old_values.post_logout_redirect_uris = [];
-      }
-      if(!new_values.post_logout_redirect_uris){
-        new_values.post_logout_redirect_uris = [];
-      }
-
-      edits.add.oidc_grant_types = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
-      edits.dlt.oidc_grant_types = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
-      edits.add.oidc_scopes = new_values.scope.filter(x=>!old_values.scope.includes(x));
-      edits.dlt.oidc_scopes = old_values.scope.filter(x=>!new_values.scope.includes(x));
-      edits.add.oidc_redirect_uris = new_values.redirect_uris.filter(x=>!old_values.redirect_uris.includes(x));
-      edits.dlt.oidc_redirect_uris = old_values.redirect_uris.filter(x=>!new_values.redirect_uris.includes(x));
-      edits.add.oidc_post_logout_redirect_uris = new_values.post_logout_redirect_uris.filter(x=>!old_values.post_logout_redirect_uris.includes(x));
-      edits.dlt.oidc_post_logout_redirect_uris = old_values.post_logout_redirect_uris.filter(x=>!new_values.post_logout_redirect_uris.includes(x));
-    }
-    if(new_values.protocol==='saml'){
-      if(!old_values.requested_attributes){
-        old_values.requested_attributes = [];
-      }
-      if(!new_values.requested_attributes){
-        new_values.requested_attributes = [];
-      }
-      edits.add.requested_attributes = new_values.requested_attributes.filter(x=> !old_values.requested_attributes.some(e=> e.friendly_name === x.friendly_name));
-      edits.dlt.requested_attributes = old_values.requested_attributes.filter(x=> !new_values.requested_attributes.some(e=> e.friendly_name === x.friendly_name));
-      edits.update.requested_attributes = new_values.requested_attributes.filter(x=> old_values.requested_attributes.some(e=> e.friendly_name === x.friendly_name&&(e.required!==x.required||e.name!==x.name)));
-    }
 
     for(var property in formConfig[tenant].form.extra_fields){
       if(formConfig[tenant].form.extra_fields[property].tag==="coc"||formConfig[tenant].form.extra_fields[property].tag==="once"){
@@ -149,25 +107,89 @@ const calcDiff = (oldState,newState,tenant) => {
 
       }
     }
-    for(var i in edits){
-      for(var key in edits[i]){
-        if(edits[i][key].length===0&&key!='requested_attributes'){
-          delete edits[i][key]
+    delete new_values.contacts;
+    delete old_values.contacts;
+    if(diff(old_values,new_values)){
+      edits.details = new_values;
+    }
+    return edits
+}
+
+const calcClientDiff = (oldState, newState) => {
+    var new_values = Object.assign({},newState);
+    var old_values = Object.assign({},oldState);
+
+    var edits = {
+        add:{},
+        dlt:{},
+        update:{
+            requested_attributes:[]
+        },
+        details:{}
+    };
+    if(new_values.protocol==='oidc'){
+        if(!old_values.redirect_uris){
+            old_values.redirect_uris = [];
         }
-      }
+        if(!new_values.redirect_uris){
+            new_values.redirect_uris = [];
+        }
+        if(!old_values.scope){
+            old_values.scope = [];
+        }
+        if(!new_values.scope){
+            new_values.scope = [];
+        }
+        if(!old_values.grant_types){
+            old_values.scope = [];
+        }
+        if(!new_values.grant_types){
+            new_values.scope = [];
+        }
+        if(!old_values.post_logout_redirect_uris){
+            old_values.post_logout_redirect_uris = [];
+        }
+        if(!new_values.post_logout_redirect_uris){
+            new_values.post_logout_redirect_uris = [];
+        }
+
+        edits.add.oidc_grant_types = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
+        edits.dlt.oidc_grant_types = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
+        edits.add.oidc_scopes = new_values.scope.filter(x=>!old_values.scope.includes(x));
+        edits.dlt.oidc_scopes = old_values.scope.filter(x=>!new_values.scope.includes(x));
+        edits.add.oidc_redirect_uris = new_values.redirect_uris.filter(x=>!old_values.redirect_uris.includes(x));
+        edits.dlt.oidc_redirect_uris = old_values.redirect_uris.filter(x=>!new_values.redirect_uris.includes(x));
+        edits.add.oidc_post_logout_redirect_uris = new_values.post_logout_redirect_uris.filter(x=>!old_values.post_logout_redirect_uris.includes(x));
+        edits.dlt.oidc_post_logout_redirect_uris = old_values.post_logout_redirect_uris.filter(x=>!new_values.post_logout_redirect_uris.includes(x));
+    }
+    if(new_values.protocol==='saml'){
+        if(!old_values.requested_attributes){
+            old_values.requested_attributes = [];
+        }
+        if(!new_values.requested_attributes){
+            new_values.requested_attributes = [];
+        }
+        edits.add.requested_attributes = new_values.requested_attributes.filter(x=> !old_values.requested_attributes.some(e=> e.friendly_name === x.friendly_name));
+        edits.dlt.requested_attributes = old_values.requested_attributes.filter(x=> !new_values.requested_attributes.some(e=> e.friendly_name === x.friendly_name));
+        edits.update.requested_attributes = new_values.requested_attributes.filter(x=> old_values.requested_attributes.some(e=> e.friendly_name === x.friendly_name&&(e.required!==x.required||e.name!==x.name)));
+    }
+    for(var i in edits){
+        for(var key in edits[i]){
+            if(edits[i][key].length===0&&key!='requested_attributes'){
+                delete edits[i][key]
+            }
+        }
     }
     delete new_values.requested_attributes;
     delete old_values.requested_attributes;
     delete new_values.grant_types;
-    delete new_values.contacts;
     delete new_values.redirect_uris;
     delete new_values.scope;
     delete old_values.grant_types;
-    delete old_values.contacts;
     delete old_values.redirect_uris;
     delete old_values.scope;
     if(diff(old_values,new_values)){
-      edits.details = new_values;
+        edits.details = new_values;
     }
     return edits
 }
@@ -530,7 +552,8 @@ function shallowEqual(object1, object2) {
 
 
 module.exports = {
-  calcDiff,
+  calcServiceDiff,
+  calcClientDiff,
   addToString,
   sendMail,
   sendInvitationMail,

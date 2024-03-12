@@ -61,7 +61,7 @@ SELECT json_build_object('id',sd.id,
                                     FROM (SELECT * FROM client_details cd WHERE cd.service_id = sd.id AND cd.deleted = false ${protocol_filter:raw})
                                     LEFT JOIN client_details_oidc USING (id)
                                     LEFT JOIN client_details_saml USING (id)
-                                    LEFT JOIN client_state USING (id)) as cd WHERE ${protocol_id_filter:raw}
+                                    LEFT JOIN client_state USING (id)) as cd ${protocol_id_filter:raw}
                                 )
 						 ) json
     FROM (SELECT *

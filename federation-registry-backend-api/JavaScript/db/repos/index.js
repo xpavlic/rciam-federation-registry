@@ -1,14 +1,18 @@
 // Renaming and exporting all repository classes:
 module.exports = {
     ServiceContacts: require('./service_contacts'),
-    ServiceDetailsProtocol: require('./service_details_protocol'),
+    ClientDetailsProtocol: require('./client_details_protocol'),
+    ClientDetails: require('./client_details'),
     ServiceDetails: require('./service_details'),
     User:require('./user'),
     UserInfo: require('./user_info'),
     UserEduPersonEntitlement: require('./user_edu_person_entitlement'),
     ServiceMultiValued: require('./service_multi_valued'),
+    ClientMultiValued: require('./client_multi_valued'),
     ServicePetitionDetails: require('./service_petition_details'),
+    ClientPetitionDetails: require('./client_petition_details'),
     Service: require('./service'),
+    ClientRepository: require('./client'),
     ServiceState: require('./service_state'),
     Petition: require('./petition'),
     ServiceList: require('./service_list'),
@@ -19,7 +23,7 @@ module.exports = {
     Tenants: require('./tenants'),
     DeployerAgents: require('./deployer_agent'),
     DeploymentTasks: require('./deployment_tasks'),
-    ServiceErrors: require('./service_errors'),
+    ClientErrors: require('./client_errors'),
     Organizations: require('./organizations'),
     BannerAlerts: require('./banner_alerts'),
     ServiceTags: require('./service_tags')

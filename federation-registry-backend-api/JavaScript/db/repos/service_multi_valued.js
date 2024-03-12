@@ -7,8 +7,6 @@ class ServiceMultiValuedRepository {
     this.db = db;
     this.pgp = pgp;
     // set-up all ColumnSet objects, if needed:
-    cs.serviceSamlAttributes = new pgp.helpers.ColumnSet(['owner_id','friendly_name','name','required','name_format']); 
-    cs.updateSamlAttributes = new pgp.helpers.ColumnSet(['?owner_id','friendly_name','name','required','name_format']);
     cs.multi = new pgp.helpers.ColumnSet(['owner_id','value']);
     cs.serviceBooleanPet = new pgp.helpers.ColumnSet(['petition_id','name','value']);
     cs.serviceBooleanSer = new pgp.helpers.ColumnSet(['service_id','name','value']);
@@ -78,90 +76,6 @@ class ServiceMultiValuedRepository {
       }
   }
 
-
-async updateSamlAttributes(type,data,service_id){
-  if(data&&data.length>0){
-    for(const item of data) {
-      item.owner_id = parseInt(service_id);
-     }
-     const query = this.pgp.helpers.update(data,cs.updateSamlAttributes,type==='petition'?'service_petition_saml_attributes':'service_saml_attributes') + ' WHERE v.owner_id = t.owner_id AND v.friendly_name=t.friendly_name';
-     return this.db.none(query).then(res=>{
-      return true
-     }).catch(error=>{
-      throw error
-     });
-  }
-  else{
-    return true;
-  }
-}
-
-
-  async addSamlAttributes(type,data,service_id){
-    if(data && data.length>0){
-      for(const item of data) {
-        item.owner_id = service_id;
-       }
-      const query = this.pgp.helpers.insert(data,cs.serviceSamlAttributes,type==='petition'?'service_petition_saml_attributes':'service_saml_attributes');
-      return this.db.none(query).then(data => {
-          return true
-      })
-      .catch(error => {
-          throw error
-      });
-
-    }else{
-      return true
-    }
-  }
-
-
-  async addSamlAttributesMultiple(data,table){
-    //console.log(data);.
-    if(data&&data.length>0){
-      const query = this.pgp.helpers.insert(data,cs.serviceSamlAttributes,table);
-      return this.db.none(query).then(data => {
-          return true
-      })
-      .catch(error => {
-          throw error
-      });
-    }
-  }
-
-  async deleteSamlAttributes(type,data,service_id){
-    let attribute_values = [];
-    data.forEach(attribute=>{
-      attribute_values.push(attribute.friendly_name)
-    })
-    
-    if(data&&data.length>0){
-      try{
-        const query = this.pgp.as.format('DELETE FROM ' + (type==='petition'?'service_petition_saml_attributes':'service_saml_attributes') +' WHERE owner_id=$1 AND friendly_name IN ($2:csv)',[+service_id,attribute_values]);
-        return this.db.any(query).then(result =>{
-
-          return result
-        });
-
-      }
-      catch(err){
-        console.log(err);
-      }
-    }
-
-  }
-
-
-  async addMultiple(data,table){
-    const query = this.pgp.helpers.insert(data,cs.multi,table);
-    return this.db.none(query).then(data => {
-        return true
-    })
-    .catch(error => {
-        throw error
-    });
-  }
-
   async add(type,attribute,data,id){
 
     let values = []
@@ -190,7 +104,6 @@ async updateSamlAttributes(type,data,service_id){
     else{
       return null
     }
-
   }
 
 
@@ -220,24 +133,12 @@ async updateSamlAttributes(type,data,service_id){
         return result
       });
     }
-
   }
+
   async delete(name,owner_id){
       const table = new this.pgp.helpers.TableName({table:name});
       return this.db.none('DELETE FROM $1 WHERE owner_id=$2',[table,+owner_id]);
   }
-
-
-
-
-
-
-
-
-
-
-
-
 
 }
 
