@@ -72,7 +72,7 @@ const getServiceListValidation = () => {
     query('pending_sub').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> {if(['pending','changes','request_review'].includes(value)){return true}else{return false}}).withMessage('Value is not supported'),
     query('search_string').optional({checkFalsy:true}).isString(),
     query('owner').optional({checkFalsy:true}).isString(),
-    query('error').optional({checkFalsy:true}).isBoolean().toBoolean(),    
+    query('error').optional({checkFalsy:true}).isBoolean().toBoolean(),
     query('tags').optional({checkFalsy:true}).custom((value,{req,location,path})=>{
       try{
         if(value){
@@ -80,12 +80,12 @@ const getServiceListValidation = () => {
           if(tags.length>0){
             tags.forEach(tag=>{
               if(tag.length>36){
-                throw new Error('The Tag value is not supported because it is too long (' +tag +'), max 36 characters');            
+                throw new Error('The Tag value is not supported because it is too long (' +tag +'), max 36 characters');
               }
             })
-          } 
+          }
         }
-        return true 
+        return true
       }
       catch(err){
         throw new Error(err);
@@ -160,12 +160,12 @@ const getServicesValidation = () => {
           if(tags.length>0){
             tags.forEach(tag=>{
               if(tag.length>36){
-                throw new Error('The Tag value is not supported because it is too long +(' +tag +') max 36 characters');            
+                throw new Error('The Tag value is not supported because it is too long +(' +tag +') max 36 characters');
               }
             })
-          } 
+          }
         }
-        return true 
+        return true
       }
       catch(err){
         throw new Error(err);
@@ -178,12 +178,12 @@ const getServicesValidation = () => {
           if(tags.length>0){
             tags.forEach(tag=>{
               if(tag.length>36){
-                throw new Error('The Tag value is not supported because it is too long +(' +tag +') max 36 characters');            
+                throw new Error('The Tag value is not supported because it is too long +(' +tag +') max 36 characters');
               }
             })
-          } 
+          }
         }
-        return true 
+        return true
       }
       catch(err){
         throw new Error(err);
@@ -207,7 +207,7 @@ const isEmpty = (value) => {
 }
 
 const serviceValidationRules = (options,req) => {
-  
+
   const append_error = (value,req,pos,field,error) => {
     if(!Array.isArray(req.outdated_errors)){
       req.outdated_errors = [];
@@ -255,7 +255,7 @@ const serviceValidationRules = (options,req) => {
       }
   }
   const optionalError = (value,req,pos,field,error) => {
-    if(options.optional){      
+    if(options.optional){
       req.body[pos].outdated = true;
       append_error(typeof value === 'object'?JSON.stringify(value):value,req,pos,field,error);
     }
@@ -293,7 +293,7 @@ const serviceValidationRules = (options,req) => {
 
   const sanitizeInteger = (value) =>{
     if(isEmpty(value)||(typeof(value)!=='number'&&typeof(parseInt(value))!=='number')){
-      return null;    
+      return null;
     }else{
       return parseInt(value);
     }
@@ -362,11 +362,11 @@ const serviceValidationRules = (options,req) => {
             if(contact.email&&!contact.email.toLowerCase().match(reg.regEmail)||!tenant_config[tenant].form.contact_types.includes(contact.type)){
               throw new Error("Invalid contact format");
             }
-          }); 
+          });
           tenant_config[tenant].form.contact_requirements.forEach((requirement,index)=>{
             let type_array =requirement.type.split(" ");
-            let requirement_met = false; 
-            value.forEach(contact=>{              
+            let requirement_met = false;
+            value.forEach(contact=>{
               if(type_array.includes(contact.type)){
                 requirement_met = true;
               }
@@ -384,7 +384,7 @@ const serviceValidationRules = (options,req) => {
             success = true
           }
         }
-        if(!success){          
+        if(!success){
           optionalError(value,req,pos,'contact',"Contact type missing");
           return true;
         }else{
@@ -404,7 +404,7 @@ const serviceValidationRules = (options,req) => {
         }
         return !skip
         }).exists({checkFalsy:true}).withMessage('client_id is missing').if(value=>{return value}).isString().withMessage('client_id must be a string').if((value)=>{return(value.constructor === stringConstructor)}).isLength({min:2, max:128}).withMessage('client_id must be between 2 and 128 characters').custom((value,{req,location,path})=> {
-          try{          
+          try{
             return (!value||value.match(reg.regClientId))
           }
           catch(err){
@@ -412,11 +412,19 @@ const serviceValidationRules = (options,req) => {
           }
         }).withMessage('Client Id can contain only numbers, letters and the special characters  \"$-_.+!*\'(),\"').if(()=>{return options.check_available}).custom((value,{req,location,path})=> {
           let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-          return db.service_details_protocol.checkClientId(value,0,0,tenant,req.body[path.match(/\[(.*?)\]/)[1]].integration_environment).then(available=> {
-            if(!available){
-              return Promise.reject('Not available ('+ value +')');
-            }
-            else{
+          if ('merge_environments_on_deploy' in config && config.merge_environments_on_deploy) {
+            return db.service_details_protocol.checkClientIdAllEnvironments(value, 0, 0, tenant, req.body[path.match(/\[(.*?)\]/)[1]].integration_environment).then(available => {
+              if (!available) {
+                return Promise.reject('Not available (' + value + ')');
+              } else {
+                return Promise.resolve();
+              }
+            });
+          }
+          return db.service_details_protocol.checkClientId(value, 0, 0, tenant).then(available => {
+            if (!available) {
+              return Promise.reject('Not available (' + value + ')');
+            } else {
               return Promise.resolve();
             }
           });
@@ -469,7 +477,7 @@ const serviceValidationRules = (options,req) => {
                 try {
                   url = new URL(item);
                 } catch (err) {
-                  throw new Error("Invalid uri");  
+                  throw new Error("Invalid uri");
                 }
                 if(item.includes('#')){
                   throw new Error("Uri can't contain fragments");
@@ -477,12 +485,12 @@ const serviceValidationRules = (options,req) => {
                 if(req.body[pos].application_type==='WEB'){
                   if(!tenant_config[tenant].test_env.includes(req.body[pos].integration_environment)&& url){
                     if(url.protocol !== 'https:'&&!(url.protocol==='http:'&&url.hostname==='localhost')){
-                      throw new Error("Uri must be a secure url starting with https://");              
+                      throw new Error("Uri must be a secure url starting with https://");
                     }
                   }
                   else{
                     if(url&&!(url.protocol==='http:'||url.protocol==='https:')){
-                      throw new Error("Uri must be a url starting with http(s):// ");                              
+                      throw new Error("Uri must be a url starting with http(s):// ");
                     }
                   }
                 }
@@ -491,17 +499,17 @@ const serviceValidationRules = (options,req) => {
                     throw new Error("Uri can't be of schema 'javascript:'");
                   }
                   else if(url.protocol==='data:'){
-                    throw new Error("Uri can't be of schema 'data:'");              
+                    throw new Error("Uri can't be of schema 'data:'");
                   }
                 }
                 if(item.includes('*')){
-                  return new Error("Uri can't contain wildcard character '*'" );                          
+                  return new Error("Uri can't contain wildcard character '*'" );
                 }
                 if(item.includes(' ')){
-                  return new Error("Uri can't contain spaces");                          
+                  return new Error("Uri can't contain spaces");
                 }
               }
-              
+
             });
           }
           else{
@@ -531,8 +539,8 @@ const serviceValidationRules = (options,req) => {
                 try {
                   url = new URL(item);
                 } catch (err) {
-                  throw new Error("Invalid uri");  
-  
+                  throw new Error("Invalid uri");
+
                 }
                 if(item.includes('#')){
                   throw new Error("Uri can't contain fragments");
@@ -540,12 +548,12 @@ const serviceValidationRules = (options,req) => {
                 if(req.body[pos].application_type==='WEB'){
                   if(!tenant_config[tenant].test_env.includes(req.body[pos].integration_environment)&& url){
                     if(url.protocol !== 'https:'&&!(url.protocol==='http:'&&url.hostname==='localhost')){
-                      throw new Error("Uri must be a secure url starting with https://");              
+                      throw new Error("Uri must be a secure url starting with https://");
                     }
                   }
                   else{
                     if(url&&!(url.protocol==='http:'||url.protocol==='https:')){
-                      throw new Error("Uri must be a url starting with http(s):// ");                              
+                      throw new Error("Uri must be a url starting with http(s):// ");
                     }
                   }
                 }
@@ -554,17 +562,17 @@ const serviceValidationRules = (options,req) => {
                     throw new Error("Uri can't be of schema 'javascript:'");
                   }
                   else if(url.protocol==='data:'){
-                    throw new Error("Uri can't be of schema 'data:'");              
+                    throw new Error("Uri can't be of schema 'data:'");
                   }
                 }
                 if(item.includes('*')){
-                  return new Error("Uri can't contain wildcard character '*'" );                          
+                  return new Error("Uri can't contain wildcard character '*'" );
                 }
                 if(item.includes(' ')){
-                  return new Error("Uri can't contain spaces");                          
+                  return new Error("Uri can't contain spaces");
                 }
               }
-              
+
             });
           }
           else{
@@ -656,7 +664,7 @@ const serviceValidationRules = (options,req) => {
       body('*.application_type').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1],'application_type')}).withMessage('Service application_type is missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=>{
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         if(!value||tenant_config[tenant].form.application_type.includes(value)){
-          
+
           return true
         }
         else{
@@ -696,11 +704,11 @@ const serviceValidationRules = (options,req) => {
           throw new Error("access_token_timeout_seconds must be an integer in specified range [1-"+ max +"]")
         }}),
       body('*.refresh_token_validity_seconds').customSanitizer((value,{req,location,path}) => {
-        let pos = path.match(/\[(.*?)\]/)[1]; 
+        let pos = path.match(/\[(.*?)\]/)[1];
           return sanitizeInteger(value);
         }).custom((value,{req,location,path})=> {
           let pos = path.match(/\[(.*?)\]/)[1];
-          
+
           if(isEmpty(value)&&req.body[pos].scope&&req.body[pos].scope.includes('offline_access')){
             if(options.optional){
               req.body[pos].outdated = true;
@@ -741,17 +749,17 @@ const serviceValidationRules = (options,req) => {
         }
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let max = tenant_config[tenant].form.device_code_validity_seconds;
-        
+
         if(isEmpty(value)){
           return true;
         }else if((isNotEmpty(value)&&value<=max&&value>=0)||(req.body[pos].protocol!=='oidc'||isEmpty(req.body[pos].grant_types)||!req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code'))){
           return true}else{
           throw new Error("Device Code Validity Seconds must be an integer in specified range [0-"+ max +"]")
         }
-        
+
         }).withMessage('Must be an integer in specified range'),
       body('*.code_challenge_method').optional().if((value,{req,location,path})=> {return req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=> {
-        try{          
+        try{
           return (!value||value.match(reg.regCodeChalMeth))
         }
         catch(err){
@@ -817,11 +825,19 @@ const serviceValidationRules = (options,req) => {
         }
       }).withMessage('Entity id must be a url'),
       body('*.metadata_url').if((value,{req,location,path})=>{return req.body[path.match(/\[(.*?)\]/)[1]].protocol==='saml'}).exists({checkFalsy:true}).withMessage('Metadata url missing').if((value)=>{ return value}).isString().withMessage('Metadata url must be a string').if((value)=>{return(value.constructor === stringConstructor)}).custom((value)=> {return value.match(reg.regSimpleUrl)}).withMessage('Metadata url must be a url').if(()=>{return options.check_available}).custom((value,{req,location,path})=> {
-        return db.service_details_protocol.checkClientId(value,0,0,req.params.tenant,req.body[path.match(/\[(.*?)\]/)[1]].integration_environment).then(available=> {
-          if(!available){
+        if ('merge_environments_on_deploy' in config && config.merge_environments_on_deploy) {
+          return db.service_details_protocol.checkEntityIdAllEnvironments(value, 0, 0, req.params.tenant, req.body[path.match(/\[(.*?)\]/)[1]].integration_environment).then(available => {
+            if (!available) {
+              return Promise.reject('Metadata url is not available');
+            } else {
+              return Promise.resolve();
+            }
+          });
+        }
+        return db.service_details_protocol.checkEntityId(value, 0, 0, req.params.tenant).then(available => {
+          if (!available) {
             return Promise.reject('Metadata url is not available');
-          }
-          else{
+          } else {
             return Promise.resolve();
           }
         });
@@ -855,7 +871,7 @@ const serviceValidationRules = (options,req) => {
           }
           else{
             return true
-          }          
+          }
         }
         else{
           if(isEmpty(value)){
@@ -872,9 +888,9 @@ const serviceValidationRules = (options,req) => {
         let integration_environment = req.body[path.match(/\[(.*?)\]/)[1]].integration_environment;
         let extra_fields = tenant_config[tenant].form.extra_fields;
         // Iterate through extra fields for code of conduct fields
-        let error = false; 
+        let error = false;
         for(const extra_field in extra_fields){
-          // If coc field is required 
+          // If coc field is required
           if((extra_fields[extra_field].tag==='coc'||extra_fields[extra_field].tag==='once')&&extra_fields[extra_field].required.includes(integration_environment)){
             if(value&& !(value[extra_field]==='true'||value[extra_field]===true)){
               optionalError(value,req,pos,extra_field,extra_field+ " field should be enabled");
@@ -917,8 +933,8 @@ const serviceValidationRules = (options,req) => {
         }
         return true;
       })
-        
-        
+
+
     ]
 
 
@@ -951,7 +967,7 @@ const reFormatPetition = (req,res,next) => {
 const decodeAms = (req,res,next) => {
   try{
     req.body.decoded_messages = [];
-    
+
     req.body.messages.forEach(item=> {
       req.body.decoded_messages.push(JSON.parse(Buffer.from(item.message.data, 'base64').toString()));
     });
@@ -995,26 +1011,26 @@ const validateInternal = (req,res,next) =>{
   const errors = validationResult(req);
   let service_ids = [];
   if(!errors.isEmpty()){
-    errors.errors = [...errors.errors,...req.outdated_errors]; 
+    errors.errors = [...errors.errors,...req.outdated_errors];
     errors.errors.forEach((error,index)=>{
-      
+
       var matches = error.param.match(/\[(.*?)\]/);
       if(typeof(parseInt(matches[1]))=='number'){
         !service_ids.includes(req.body[matches[1]].id)&&service_ids.push(req.body[matches[1]].id);
-        errors.errors[index].service_id = req.body[matches[1]].id; 
+        errors.errors[index].service_id = req.body[matches[1]].id;
         req.body[matches[1]].outdated = true;
-      }  
+      }
     });
-    
-    
+
+
 
     let date = new Date(Date.now());
-    fs.appendFileSync(logFile,"\n------------------------------------------------\n");    
+    fs.appendFileSync(logFile,"\n------------------------------------------------\n");
     fs.appendFileSync(logFile, util.inspect(date,{ maxArrayLength: null }));
     fs.appendFileSync(logFile,"\nTotal Flagged Services: " + service_ids.length );
-    fs.appendFileSync(logFile,"\n------------------------------------------------\n");    
-    fs.appendFileSync(logFile, util.inspect(errors.errors,{ maxArrayLength: null })); 
-    fs.appendFileSync(logFile,"\n");    
+    fs.appendFileSync(logFile,"\n------------------------------------------------\n");
+    fs.appendFileSync(logFile, util.inspect(errors.errors,{ maxArrayLength: null }));
+    fs.appendFileSync(logFile,"\n");
     fs.appendFileSync(logFile,"\n");
     //console.log(errors);
   }
@@ -1034,7 +1050,7 @@ const formatServiceBooleanForValidation = (req,res,next) => {
             if(extra_fields[extra_field].tag==='coc'||extra_fields[extra_field].tag==='once'){
               req.body[index].service_boolean[extra_field] = req.body[index][extra_field]=== 'true'||req.body[index][extra_field]=== true?true:false;
             }
-          } 
+          }
         }
       })
     }
@@ -1044,7 +1060,7 @@ const formatServiceBooleanForValidation = (req,res,next) => {
       console.log(err);
       return res.status(422).send("Invalid Format")
     }
-  
+
 }
 
 
@@ -1054,7 +1070,7 @@ const validate = (req, res, next) => {
     if(req.skipValidation){
       return next();
     }
-    
+
     const errors = validationResult(req);
     if (errors.isEmpty()) {
       return next();
