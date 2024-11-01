@@ -26,6 +26,7 @@ import {ConfirmationModal} from './Components/Modals';
 import {userContext,tenantContext} from './context.js';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import LogoContainer from './Components/LogoContainer.js';
+import MoveDialog from "./Components/MoveDialog";
 const {capitalWords} = require('./helpers.js');
 var filterTimeout;
 
@@ -883,6 +884,11 @@ const ServiceList= (props)=> {
   }
 
 function TableItem(props) {
+
+  let moveInsteadCopy = false;
+  if ('merge_environments_on_deploy' in config && config.merge_environments_on_deploy) {
+    moveInsteadCopy = true;
+  }
   // eslint-disable-next-line
   const [tenant,setTenant] = useContext(tenantContext);
   const [manageTags,setManageTags] = useState(false);
@@ -894,9 +900,9 @@ function TableItem(props) {
     setVariant(index===1?"secondary":index===2?"dark":"info");
   },[props.service,tenant.form_config.integration_environment])
 
-  const [showCopyDialog,setShowCopyDialog] = useState(false);
-  const toggleCopyDialog = () => {
-    setShowCopyDialog(!showCopyDialog);
+  const [showCopyMoveDialog,setShowCopyMoveDialog] = useState(false);
+  const toggleCopyMoveDialog = () => {
+    setShowCopyMoveDialog(!showCopyMoveDialog);
   }
 
 
@@ -977,7 +983,21 @@ function TableItem(props) {
         <div className="petition-actions">
           <Row>
             <Col className='controls-col  controls-col-buttons'>
-            <CopyDialog service_id={props.service.service_id} show={showCopyDialog} toggleCopyDialog={toggleCopyDialog} current_environment={props.service.integration_environment} />
+              {moveInsteadCopy ? (
+                  <MoveDialog
+                      service_id={props.service.service_id}
+                      show={showCopyMoveDialog}
+                      toggleMoveDialog={toggleCopyMoveDialog}
+                      current_environment={props.service.integration_environment}
+                  />
+              ) : (
+                    <CopyDialog
+                      service_id={props.service.service_id}
+                      show={showCopyMoveDialog}
+                      toggleCopyDialog={toggleCopyMoveDialog}
+                      current_environment={props.service.integration_environment}
+                    />)
+              }
                 {props.service.state==='error'&&user.actions.includes('view_errors')?
                 <div className="notification">
                   <FontAwesomeIcon icon={faExclamation} className="fa-exclamation"/>
@@ -1076,8 +1096,8 @@ function TableItem(props) {
               <Dropdown.Item as='span'>
                 <div>
                   <Link to={"#"} onClick={()=>{
-                    toggleCopyDialog();
-                  }}>Copy Service</Link>
+                    toggleCopyMoveDialog();
+                  }}>{moveInsteadCopy ? "Move Service" : "Copy Service"}</Link>
                 </div>
               </Dropdown.Item>
               :null}

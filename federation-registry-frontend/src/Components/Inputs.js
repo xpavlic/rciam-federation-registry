@@ -617,12 +617,12 @@ export function SelectEnvironment(props){
               placement='right'
               overlay={
                 <Tooltip id={`tooltip-right`}>
-                  Copy Service
+                    {props.moveInsteadCopy ? "Move Service" : "Copy Service"}
                 </Tooltip>
               }
             >
 
-            <Button className="copy_button" variant="success" onClick={()=>props.toggleCopyDialog()}>+</Button>
+            <Button className="copy_button" variant="success" onClick={()=>props.toggleCopyMoveDialog()}>+</Button>
             </OverlayTrigger>
       :null}
     </div>

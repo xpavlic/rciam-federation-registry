@@ -32,6 +32,7 @@ import countryData from 'country-region-data';
 import {SimpleInput,CountrySelect,AuthMethRadioList,SelectEnvironment,DeviceCode,Select,PublicKey,ListInput,LogoInput,TextAria,ListInputArray,CheckboxList,SimpleCheckbox,ClientSecret,TimeInput,RefreshToken,Contacts,OrganizationField,SimpleRadio,MetadataInput} from './Components/Inputs.js'// eslint-disable-next-line
 import { SamlAttributesInput } from './Components/SamlAttributes.js';
 import {ConfirmationModal} from './Components/Modals';
+import MoveDialog from "./Components/MoveDialog";
 
 
 
@@ -47,6 +48,10 @@ let timeouts = {};
 
 
 const ServiceForm = (props)=> {
+  let moveInsteadCopy = false;
+  if ('merge_environments_on_deploy' in config && config.merge_environments_on_deploy) {
+    moveInsteadCopy = true;
+  }
 
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
@@ -80,7 +85,7 @@ const ServiceForm = (props)=> {
   const [checkedEnvironment,setCheckedEnvironment] = useState();
   const [asyncResponse,setAsyncResponse] = useState(false);
   const [formValues,setFormValues] = useState();
-  const [showCopyDialog,setShowCopyDialog] = useState(false);
+  const [showCopyMoveDialog,setShowCopyMoveDialog] = useState(false);
   const [showInitErrors,setShowInitErrors] = useState(false);
   const [logoWarning,setLogoWarning] = useState(false);
   const [serviceTags,setServiceTags] = useState([]);
@@ -663,8 +668,8 @@ const ServiceForm = (props)=> {
 
 
 
-  const toggleCopyDialog = () => {
-    setShowCopyDialog(!showCopyDialog);
+  const toggleCopyMoveDialog = () => {
+    setShowCopyMoveDialog(!showCopyMoveDialog);
   }
 
   const canReview = (integration_environment) => {
@@ -1033,8 +1038,9 @@ const ServiceForm = (props)=> {
       errors,
       isSubmitting})=>(
       <div className="tab-panel">
-              {showCopyDialog?<CopyDialog service_id={service_id} show={showCopyDialog} toggleCopyDialog={toggleCopyDialog} current_environment={props.initialValues.integration_environment} />:null}
-              
+              {showCopyMoveDialog&&!moveInsteadCopy?<CopyDialog service_id={service_id} show={showCopyMoveDialog} toggleCopyDialog={toggleCopyMoveDialog} current_environment={props.initialValues.integration_environment} />:null}
+              {showCopyMoveDialog&&moveInsteadCopy?<MoveDialog service_id={service_id} show={showCopyMoveDialog} toggleMoveDialog={toggleCopyMoveDialog} current_environment={props.initialValues.integration_environment} />:null}
+
               <ProcessingRequest active={asyncResponse}/>
               {props.user.actions.includes('manage_tags')&&service_id?
                 <div className='service-form-tags-container'>
@@ -1110,7 +1116,8 @@ const ServiceForm = (props)=> {
                           disabled={disabled||tenant.form_config.integration_environment.length===1||props.copy||props.disableEnvironment}
                           changed={props.changes?props.changes.integration_environment:null}
                           copybuttonActive={props.owned&&props.disabled&&service_id}
-                          toggleCopyDialog={toggleCopyDialog}
+                          toggleCopyMoveDialog={toggleCopyMoveDialog}
+                          moveInsteadCopy={moveInsteadCopy}
                         />
                       </InputRow>
                       <InputRow  moreInfo={{}} title={t('form_logo')}>

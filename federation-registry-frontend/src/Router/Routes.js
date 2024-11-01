@@ -68,11 +68,21 @@ const Routes = (props) => {
         </div>
         <CopyService user={props.user}/>
       </ProtectedRoute>
+      <ProtectedRoute user={props.user} path="/:tenant_name/services/:service_id/move">
+        <div className="links">
+          <Link to={"/" + tenant?.name + "/home"}>{props.t('link_home')}</Link>
+          <span className="link-seperator">/</span>
+          <Link to={"/" + tenant?.name + "/services"}>{props.t('link_petitions')}</Link>
+          <span className="link-seperator">/</span>
+          Move Service
+        </div>
+        <EditService user={props.user}/>
+      </ProtectedRoute>
       <ProtectedRoute user={props.user} path="/:tenant_name/form/new">
         <div className="links">
-          <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
+          <Link to={"/" + tenant?.name + "/home"}>{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
-          <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
+          <Link to={"/" + tenant?.name + "/services"}>{props.t('link_petitions')}</Link>
           <span className="link-seperator">/</span>
           New Service
         </div>
