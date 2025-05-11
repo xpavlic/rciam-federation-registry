@@ -518,6 +518,8 @@ router.put('/agent/set_services_state',amsAgentAuth,(req,res,next)=>{
               req.body.forEach(service=> {
                 agents.forEach(agent => {
 
+                  // Added by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) for not taking integration_environment into consideration when
+                  // assigning deployment tasks when merging integration environments is enabled.
                   let service_agent_condition =
                       agent.tenant === service.tenant &&
                       agent.entity_protocol === service.protocol &&
@@ -1481,6 +1483,9 @@ function checkCertificate(req,res,next) {
 // Checking Availability of Client Id/Entity Id
 const isAvailable= async (t,id,protocol,petition_id,service_id,tenant,environment)=>{
   if(id){
+
+    // Updated by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) to check availability of client id and entity id across all integration
+    // environments when merging of integration environments is enabled.
     if(protocol==='oidc'){
       if ('merge_environments_on_deploy' in config && config.merge_environments_on_deploy) {
         return t.service_details_protocol.checkClientIdAllEnvironments(id,service_id,petition_id,tenant,environment);

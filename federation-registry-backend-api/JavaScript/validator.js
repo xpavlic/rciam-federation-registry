@@ -412,6 +412,9 @@ const serviceValidationRules = (options,req) => {
           }
         }).withMessage('Client Id can contain only numbers, letters and the special characters  \"$-_.+!*\'(),\"').if(()=>{return options.check_available}).custom((value,{req,location,path})=> {
           let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+
+          // Upadted by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) to check availability of client id when merging of integration
+          // environments is enabled
           if ('merge_environments_on_deploy' in config && config.merge_environments_on_deploy) {
             return db.service_details_protocol.checkClientIdAllEnvironments(value, 0, 0, tenant, req.body[path.match(/\[(.*?)\]/)[1]].integration_environment).then(available => {
               if (!available) {
@@ -825,6 +828,8 @@ const serviceValidationRules = (options,req) => {
         }
       }).withMessage('Entity id must be a url'),
       body('*.metadata_url').if((value,{req,location,path})=>{return req.body[path.match(/\[(.*?)\]/)[1]].protocol==='saml'}).exists({checkFalsy:true}).withMessage('Metadata url missing').if((value)=>{ return value}).isString().withMessage('Metadata url must be a string').if((value)=>{return(value.constructor === stringConstructor)}).custom((value)=> {return value.match(reg.regSimpleUrl)}).withMessage('Metadata url must be a url').if(()=>{return options.check_available}).custom((value,{req,location,path})=> {
+        // Upadted by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) to check availability of entity id when merging of integration
+        // environments is enabled.
         if ('merge_environments_on_deploy' in config && config.merge_environments_on_deploy) {
           return db.service_details_protocol.checkEntityIdAllEnvironments(value, 0, 0, req.params.tenant, req.body[path.match(/\[(.*?)\]/)[1]].integration_environment).then(available => {
             if (!available) {
