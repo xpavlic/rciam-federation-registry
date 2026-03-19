@@ -36,7 +36,7 @@ const options = {
 const publishResultsOptions = {
   headers: {
     "Content-Type": "application/json",
-    authorization: config.ams_auth_key,
+    authorization: config.express_key,
   },
 };
 
