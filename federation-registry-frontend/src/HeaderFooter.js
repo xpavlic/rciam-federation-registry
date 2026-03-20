@@ -133,11 +133,17 @@ export const Footer =(props) =>{
           </Col>
     			<Col sm="3" className="ssp-footer__item">
             <div className="footer-logo-container">
-              <a href="https://grnet.gr/">
-                <Image className="ssp-footer__item__logo" src="https://vanilla-ui.aai-dev.grnet.gr/proxy/module.php/themevanilla/resources/images/grnet_logo_en.svg" alt="GRNET"/>
-              </a>
-              <div className="ssp-footer__item__copyright">
-              {tenant&&(tenant?.config?.copyright)}     </div>
+                <a href={tenant?.config?.footer_logo_link || "https://grnet.gr/"}>
+                    <Image
+                        className="ssp-footer__item__logo"
+                        src={tenant?.config?.footer_logo_url || "https://vanilla-ui.aai-dev.grnet.gr/proxy/module.php/themevanilla/resources/images/grnet_logo_en.svg"}
+                        alt="logo"
+                    />
+                </a>
+
+                <div className="ssp-footer__item__copyright">
+                    {tenant && tenant?.config?.copyright}
+                </div>
             </div>
           </Col>
           <Col sm="3" className="ssp-footer__item">
