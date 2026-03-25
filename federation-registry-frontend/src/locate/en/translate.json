@@ -1,7 +1,7 @@
 {
   "translations":{
-    "main_greeting":"Welcome",
-    "login":"Login",
+    "main_greeting":"Connect your research",
+    "login":"Log in as Service Administrator",
     "logout":"Logout",
     "reconfiguration_info":"This is a reconfiguration request, changes are highlighted bellow.",
     "nav_title":"PERSONAL",
