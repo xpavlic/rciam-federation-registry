@@ -1553,7 +1553,7 @@ const ServiceForm = (props)=> {
                           changed={props.changes?props.changes.logo_uri:null}
                         />
                       </InputRow>
-                      <InputRow  moreInfo={tenant.form_config.more_info.website_url} title={t('form_website_url')} description={t('form_website_url_desc')} error={errors.website_url} touched={touched.website_url}>
+                      <InputRow moreInfo={tenant.form_config.more_info.website_url} title={t('form_website_url')} description={t('form_website_url_desc')} error={errors.website_url} touched={touched.website_url}>
                         <SimpleInput
                           name='website_url'
                           placeholder={t('form_url_placeholder')}
@@ -1676,7 +1676,7 @@ const ServiceForm = (props)=> {
                         </React.Fragment>
                         :null
                       }
-                    <InputRow  moreInfo={tenant.form_config.more_info.organization_url} title={t('form_organization_url_title')} required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} description={t('form_organization_url_desc')} error={errors.organization_url} touched={touched.organization_url}>
+                    <InputRow moreInfo={tenant.form_config.more_info.organization_url} title={t('form_organization_url_title')} required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} description={t('form_organization_url_desc')} error={errors.organization_url} touched={touched.organization_url}>
                         <SimpleInput
                             name='organization_url'
                             placeholder={t('form_url_placeholder')}
