@@ -64,7 +64,7 @@ SELECT (
         'rp_blocked_idps_desc', (SELECT json_agg((v.value)) FROM service_petition_rp_blocked_idps_desc v WHERE sd.id = v.owner_id),
         'rp_only_allowed_idps_desc', (SELECT json_agg((v.value)) FROM service_petition_rp_only_allowed_idps_desc v WHERE sd.id = v.owner_id),
         'contacts', (SELECT json_agg(json_build_object('email',v.value,'type',v.type)) FROM service_petition_contacts v WHERE sd.id = v.owner_id),
-        'service_policies', (SELECT coalesce(json_agg(json_build_object('name',v.name,'url',v.url)), '[]'::json) FROM service_petition_policies v WHERE sd.id = v.owner_id),
+        'service_policies', (SELECT coalesce(json_agg(json_strip_nulls(json_build_object('name',v.name,'url',v.url,'url_czech',CASE WHEN v.url_czech IS NOT NULL AND v.url_czech <> v.url THEN v.url_czech ELSE NULL END))), '[]'::json) FROM service_petition_policies v WHERE sd.id = v.owner_id),
         'infrastructures', (SELECT CASE WHEN array_agg((v.value)) IS NULL THEN Array[]::varchar[] ELSE array_agg((v.value)) END FROM service_petition_infrastructures v WHERE sd.id = v.owner_id),
         'requested_attributes', (SELECT json_agg(json_build_object('friendly_name',v.friendly_name,'name',v.name,'required',v.required,'name_format',v.name_format)) FROM service_petition_saml_attributes v WHERE sd.id=v.owner_id),
         'required_attributes', (SELECT CASE WHEN array_agg((v.value)) IS NULL THEN Array[]::varchar[] ELSE array_agg((v.value)) END FROM service_petition_saml_required_attributes v WHERE sd.id = v.owner_id)

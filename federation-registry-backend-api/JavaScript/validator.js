@@ -977,7 +977,16 @@ const serviceValidationRules = (options,req) => {
           if(!item||typeof(item.name)!=='string'||typeof(item.url)!=='string'){
             success = false;
           }
+          if(item && (item.url_czech === undefined || item.url_czech === null || item.url_czech === '')){
+            item.url_czech = item.url;
+          }
           if(!item.name||!item.url||!item.url.match(reg.regSimpleUrl)){
+            success = false;
+          }
+          if(item && typeof(item.url_czech)!=='string'){
+            success = false;
+          }
+          if(item && item.url_czech && !item.url_czech.match(reg.regSimpleUrl)){
             success = false;
           }
         });

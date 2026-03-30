@@ -485,6 +485,7 @@ create table service_policies (
   owner_id bigint,
   name VARCHAR(256),
   url VARCHAR(2048),
+  url_czech VARCHAR(2048),
   FOREIGN KEY (owner_id) REFERENCES service_details(id) ON DELETE CASCADE
 );
 
@@ -507,6 +508,7 @@ create table service_petition_policies (
   owner_id bigint,
   name VARCHAR(256),
   url VARCHAR(2048),
+  url_czech VARCHAR(2048),
   FOREIGN KEY (owner_id) REFERENCES service_petition_details(id) ON DELETE CASCADE
 );
 

@@ -38,7 +38,7 @@ SELECT json_build_object('service_name', sd.service_name,'service_name_czech',sd
 						 	(SELECT json_agg(json_build_object('email',v.value,'type',v.type))
 							 FROM service_petition_contacts v WHERE sd.id = v.owner_id),
 						 'service_policies',
-						 	(SELECT coalesce(json_agg(json_build_object('name',v.name,'url',v.url)), '[]'::json)
+					 	(SELECT coalesce(json_agg(json_strip_nulls(json_build_object('name',v.name,'url',v.url,'url_czech',CASE WHEN v.url_czech IS NOT NULL AND v.url_czech <> v.url THEN v.url_czech ELSE NULL END))), '[]'::json)
 						 	 FROM service_petition_policies v WHERE sd.id = v.owner_id),
 						 'infrastructures',
 						 	(SELECT CASE WHEN array_agg((v.value)) IS NULL THEN Array[]::varchar[] ELSE array_agg((v.value)) END
