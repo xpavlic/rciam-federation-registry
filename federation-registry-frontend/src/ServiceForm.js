@@ -29,11 +29,11 @@ import * as yup from 'yup';
 import { useTranslation } from 'react-i18next';
 import parse from 'html-react-parser';
 import countryData from 'country-region-data';
-import {SimpleInput,CountrySelect,SelectEnvironment,DeviceCode,Select,ListInput,LogoInput,TextAria,CheckboxList,SimpleCheckbox,TimeInput,Contacts,ServicePolicies,OrganizationField,SimpleRadio,MetadataInput} from './Components/Inputs.js'// eslint-disable-next-line
-import {ConfirmationModal} from './Components/Modals';
+import {SimpleInput,CountrySelect,SelectEnvironment,DeviceCode,Select,ListInput,LogoInput,TextAria,CheckboxList,SimpleCheckbox,TimeInput,Contacts,ServicePolicies,OrganizationField,SimpleRadio,MetadataInput, Checkbox} from './Components/Inputs.js'// eslint-disable-next-line
 import AccessControlTab from './Components/AccessControlTab';
 import ManagersTab from './Components/ManagersTab';
 import MoveDialog from "./Components/MoveDialog";
+import { ConfirmationModal } from './Components/Modals.js';
 
 
 
@@ -1722,10 +1722,10 @@ const ServiceForm = (props)=> {
                           {t('form_terms_of_use_desc', 'By marking the checkbox, you confirm that you recognise and comply with the Terms of Use for Service Providers.')}
                         </div>
 
+                        <SimpleCheckbox
                           name='rp_accepted_tos'
                           label={
                             <span>
-                              {/* Prefix text */}
                               {t('form_terms_of_use_checkbox_prefix', 'I have read and accept the ')}
                               
                               {values.infrastructures && values.infrastructures.length > 0 ? (
@@ -1754,10 +1754,10 @@ const ServiceForm = (props)=> {
                           }
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          value={values.rp_accepted_tos}
                           checked={values.rp_accepted_tos}
                           disabled={disabled || values.integration_environment !== 'production'}
                           changed={props.changes ? props.changes.rp_accepted_tos : null}
+                        /> 
                       </InputRow>
 
                       {Object.entries(tenant.form_config.extra_fields).map(([name,field_data])=>{
