@@ -29,9 +29,10 @@ import * as yup from 'yup';
 import { useTranslation } from 'react-i18next';
 import parse from 'html-react-parser';
 import countryData from 'country-region-data';
-import {SimpleInput,CountrySelect,AuthMethRadioList,SelectEnvironment,DeviceCode,Select,PublicKey,ListInput,LogoInput,TextAria,ListInputArray,CheckboxList,SimpleCheckbox,ClientSecret,TimeInput,RefreshToken,Contacts,OrganizationField,SimpleRadio,MetadataInput} from './Components/Inputs.js'// eslint-disable-next-line
-import { SamlAttributesInput } from './Components/SamlAttributes.js';
+import {SimpleInput,CountrySelect,SelectEnvironment,DeviceCode,Select,ListInput,LogoInput,TextAria,CheckboxList,SimpleCheckbox,TimeInput,Contacts,ServicePolicies,OrganizationField,SimpleRadio,MetadataInput} from './Components/Inputs.js'// eslint-disable-next-line
 import {ConfirmationModal} from './Components/Modals';
+import AccessControlTab from './Components/AccessControlTab';
+import ManagersTab from './Components/ManagersTab';
 import MoveDialog from "./Components/MoveDialog";
 
 
@@ -75,7 +76,10 @@ const ServiceForm = (props)=> {
     supported_attributes:[],
     unsupported_attributes:[],
     entity_id:null,
-    metadata_url:null
+    metadata_url:null,
+    assertion_consumer_service:null,
+    single_logout_service:null,
+    signing_cert:null
   });
   const [metadataAsyncError,setMetadataAyncError] = useState("");
   const [metadataChecked,setMetadataChecked] = useState();
@@ -94,6 +98,30 @@ const ServiceForm = (props)=> {
   const [manageTags,setManageTags] = useState(false);
   const [timeoutId] = useState(hex(4));
   const [modalData,setModalData] = useState({});
+  const policyTypeOptions = tenant?.form_config?.service_policy_types || [];
+  const policyTypeValues = policyTypeOptions.map((policy)=>policy.value);
+  const infrastructureTermUrls = tenant?.form_config?.infrastructure_terms || {};
+  const oidcUiConfig = tenant?.form_config?.oidc_ui || {};
+  const deprecatedGrantTypes = tenant?.form_config?.grant_types_deprecated || [];
+  const oidcGrantTypeOptions = oidcUiConfig.grant_types || (tenant?.form_config?.grant_types || []).filter((grantType)=>!deprecatedGrantTypes.includes(grantType));
+  const oidcTokenEndpointMethodOptions = oidcUiConfig.token_endpoint_auth_method || tenant?.form_config?.token_endpoint_auth_method || [];
+  const oidcTokenEndpointMethodTitles = oidcUiConfig.token_endpoint_auth_method_title || oidcTokenEndpointMethodOptions.map((method)=> {
+    const methodIndex = (tenant?.form_config?.token_endpoint_auth_method || []).indexOf(method);
+    if(methodIndex >= 0 && Array.isArray(tenant?.form_config?.token_endpoint_auth_method_title)){
+      return tenant.form_config.token_endpoint_auth_method_title[methodIndex];
+    }
+    return method;
+  });
+  const rawPkceOptions = oidcUiConfig.code_challenge_method || tenant?.form_config?.code_challenge_method || [null, 'plain', 'S256'];
+  const oidcPkceOptions = rawPkceOptions.map((item)=>item===null?'':item);
+  const oidcPkceTitles = oidcUiConfig.code_challenge_method_title || oidcPkceOptions.map((item)=>{
+    if(item === 'S256') return 'SHA256 Code Challenge';
+    if(item === 'plain') return 'Plain Code Challenge';
+    return 'None';
+  });
+  const oidcScopeOptions = oidcUiConfig.scope || tenant?.form_config?.scope || [];
+  const oidcDefaultScopes = oidcUiConfig.default_scopes || tenant?.client_scopes || ['openid', 'profile', 'email'];
+  const oidcResourceIndicatorsEnabled = oidcUiConfig.resource_indicators_enabled !== false;
 
   useEffect(()=>{
     //Get tags 
@@ -137,6 +165,80 @@ const ServiceForm = (props)=> {
     if(props.initialValues.organization_name){
       setDisabledOrganizationFields(['organization_url']);
     }
+
+    if(!Array.isArray(props.initialValues.rp_blocked_idps_desc)){
+      props.initialValues.rp_blocked_idps_desc = [];
+    }
+    if(!Array.isArray(props.initialValues.rp_only_allowed_idps_desc)){
+      props.initialValues.rp_only_allowed_idps_desc = [];
+    }
+    if(typeof(props.initialValues.check_group_membership) !== 'boolean'){
+      props.initialValues.check_group_membership = false;
+    }
+    if(typeof(props.initialValues.require_vo_membership) !== 'boolean'){
+      props.initialValues.require_vo_membership = false;
+    }
+    if(typeof(props.initialValues.require_group_membership) !== 'boolean'){
+      props.initialValues.require_group_membership = false;
+    }
+    if(typeof(props.initialValues.create_group) !== 'boolean'){
+      props.initialValues.create_group = false;
+    }
+    if(typeof(props.initialValues.allow_registration) !== 'boolean'){
+      props.initialValues.allow_registration = false;
+    }
+    if(typeof(props.initialValues.dynamic_registration) !== 'boolean'){
+      props.initialValues.dynamic_registration = false;
+    }
+    if(!props.initialValues.rp_ensure_membership_desc){
+      props.initialValues.rp_ensure_membership_desc = '';
+    }
+    if(!props.initialValues.rp_ensure_group_membership_desc){
+      props.initialValues.rp_ensure_group_membership_desc = '';
+    }
+    if(!props.initialValues.registration_url){
+      props.initialValues.registration_url = '';
+    }
+
+    if(props.initialValues.protocol === 'oidc'){
+      if(!Array.isArray(props.initialValues.resource_indicators)){
+        props.initialValues.resource_indicators = [];
+      }
+      if(!Array.isArray(props.initialValues.grant_types)){
+        props.initialValues.grant_types = [];
+      }
+      props.initialValues.grant_types = props.initialValues.grant_types.filter((grantType)=>oidcGrantTypeOptions.includes(grantType));
+      if(!oidcTokenEndpointMethodOptions.includes(props.initialValues.token_endpoint_auth_method)){
+        props.initialValues.token_endpoint_auth_method = 'client_secret_basic';
+      }
+      if(!oidcPkceOptions.includes(props.initialValues.code_challenge_method || '')){
+        props.initialValues.code_challenge_method = '';
+      }
+      if(!Array.isArray(props.initialValues.scope)){
+        props.initialValues.scope = [];
+      }
+      if(!(service_id||petition_id) && props.initialValues.scope.length === 0){
+        props.initialValues.scope = oidcScopeOptions.filter((scopeItem)=>oidcDefaultScopes.includes(scopeItem));
+      }
+    }
+
+    if(props.initialValues.protocol === 'saml'){
+      const samlUiConfig = tenant?.form_config?.saml_ui || {};
+      const defaultSamlAttributes = samlUiConfig.default_attributes || ['openid', 'profile', 'email'];
+      if(!Array.isArray(props.initialValues.required_attributes)){
+        props.initialValues.required_attributes = [...defaultSamlAttributes];
+      }
+      if(typeof props.initialValues.assertion_consumer_service !== 'string'){
+        props.initialValues.assertion_consumer_service = '';
+      }
+      if(typeof props.initialValues.single_logout_service !== 'string'){
+        props.initialValues.single_logout_service = '';
+      }
+      if(typeof props.initialValues.signing_cert !== 'string'){
+        props.initialValues.signing_cert = '';
+      }
+    }
+
     setFormValues(props.initialValues);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[props.initialValues]);
@@ -194,6 +296,20 @@ const ServiceForm = (props)=> {
         }}).then(async response=>{
           if(response.status===200||response.status===304){
             let metadata = await response.json();
+            if(formRef.current){
+              if(metadata.entity_id){
+                formRef.current.setFieldValue('entity_id',metadata.entity_id,false);
+              }
+              if(metadata.assertion_consumer_service){
+                formRef.current.setFieldValue('assertion_consumer_service',metadata.assertion_consumer_service,false);
+              }
+              if(metadata.single_logout_service){
+                formRef.current.setFieldValue('single_logout_service',metadata.single_logout_service,false);
+              }
+              if(metadata.signing_cert){
+                formRef.current.setFieldValue('signing_cert',metadata.signing_cert,false);
+              }
+            }
             if(tenant.form_config.more_info.requested_attributes&&!tenant.form_config.more_info.requested_attributes.disabled){
               loadMetadata&&setMetadataLoaded(metadata);
               if(metadata.supported_attributes.length===0&&!metadata.entity_id){
@@ -264,7 +380,8 @@ const ServiceForm = (props)=> {
   ));
 
   const schema = yup.object({
-    service_name:yup.string().nullable().min(4,t('yup_char_min') + ' ('+2+')').max(256,t('yup_char_max') + ' ('+256+')').required(t('yup_required')),
+    service_name:yup.string().nullable().min(4,t('yup_char_min') + ' ('+2+')').max(255,t('yup_char_max') + ' ('+255+')').required(t('yup_required')),
+    service_name_czech:yup.string().nullable().min(4,t('yup_char_min') + ' ('+2+')').max(255,t('yup_char_max') + ' ('+255+')').required(t('yup_required')),
     // Every time client_id changes we make a fetch request to see if it is available.
     policy_uri:yup.string().nullable().when('integration_environment',{
       is:(integrationEnvironment)=> tenant.form_config.more_info.policy_uri?.required?.includes(integrationEnvironment),
@@ -272,9 +389,19 @@ const ServiceForm = (props)=> {
       otherwise: yup.string().nullable().matches(reg.regSimpleUrl,t('yup_url'))
       }),
     website_url:yup.string().nullable().matches(reg.regSimpleUrl,t('yup_url')),
+    service_login_url:yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
+    service_login_url_czech:yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
     client_id:yup.string().nullable().when('protocol',{
       is:'oidc',
-      then: yup.string().nullable().min(2,t('yup_char_min') + ' ('+2+')').max(128,t('yup_char_max') + ' ('+128+')').matches(reg.regClientId,'Client Id can contain only numbers, letters and the special characters  "$-_.+!*\'(),"').test('testAvailable',t('yup_client_id_available'),function(value){
+      then: yup.string().nullable().test('testClientIdFormat','Client Id can contain only numbers, letters and the special characters  "$-_.+!*\'(),"',function(value){
+        if(!value){
+          return true;
+        }
+        if(value.length < 2 || value.length > 128){
+          return this.createError({ message: t('yup_char_min') + ' (' + 2 + ')' });
+        }
+        return reg.regClientId.test(value);
+      }).test('testAvailable',t('yup_client_id_available'),function(value){
         if(props.initialValues.client_id===value && !props.copy){
           return true
         }
@@ -374,7 +501,7 @@ const ServiceForm = (props)=> {
           return true
         }
       })).unique(t('yup_redirect_uri_unique')).when('grant_types',{
-        is:(grant_types)=> grant_types.includes("implicit")||grant_types.includes("authorization_code"),
+        is:(grant_types)=> Array.isArray(grant_types) && grant_types.includes('authorization_code'),
         then: yup.array().min(1,t('yup_required')).nullable().required(t('yup_required'))
       })
     }),
@@ -431,6 +558,10 @@ const ServiceForm = (props)=> {
           return true
         }
       })).unique(t('yup_redirect_uri_unique'))
+    }),
+    resource_indicators:yup.array().nullable().when('protocol',{
+      is:'oidc',
+      then: yup.array().nullable().of(yup.string().required("Resource indicator can't be an empty string").matches(reg.regSimpleUrl,t('yup_url'))).unique(t('yup_redirect_uri_unique'))
     }),
     logo_uri:yup.string().nullable().matches(reg.regUrl,'Logo must be be a secure url starting with https://').test('testImage',t('yup_image_url'),function(imageUrl){
       imageExists(imageUrl);
@@ -496,18 +627,47 @@ const ServiceForm = (props)=> {
             return true;
           }
         }).test('testContacts',t('yup_contact_unique'),function(value){
+          if(!value){
+            return true;
+          }
           const array = [];
           value.map(s=>array.push(s.email+s.type));
           const unique = array.filter((v, i, a) => a.indexOf(v) === i);
           if(unique.length===array.length){return true}else{return false}
           }).required(t('yup_required')),
+    rp_accepted_tos: yup.boolean().when('integration_environment', {
+      is: 'production',
+      then: yup.boolean().oneOf([true], t('yup_terms_of_use_required')).required(t('yup_required')),
+      otherwise: yup.boolean().nullable()
+    }),
+    rp_blocked_idps_desc:yup.array().nullable().of(yup.string().min(1,t('yup_required')).max(512,t('yup_char_max') + ' ('+512+')')),
+    rp_only_allowed_idps_desc:yup.array().nullable().of(yup.string().min(1,t('yup_required')).max(512,t('yup_char_max') + ' ('+512+')')),
+    check_group_membership:yup.boolean().nullable(),
+    require_vo_membership:yup.boolean().nullable(),
+    rp_ensure_membership_desc:yup.string().nullable().when(['check_group_membership','require_vo_membership'],{
+      is:(check_group_membership,require_vo_membership)=> !!check_group_membership && !!require_vo_membership,
+      then: yup.string().required(t('yup_required')).min(2,t('yup_char_min') + ' ('+2+')').max(255,t('yup_char_max') + ' ('+255+')')
+    }),
+    require_group_membership:yup.boolean().nullable(),
+    rp_ensure_group_membership_desc:yup.string().nullable().when(['check_group_membership','require_group_membership'],{
+      is:(check_group_membership,require_group_membership)=> !!check_group_membership && !!require_group_membership,
+      then: yup.string().required(t('yup_required')).min(2,t('yup_char_min') + ' ('+2+')').max(255,t('yup_char_max') + ' ('+255+')')
+    }),
+    create_group:yup.boolean().nullable(),
+    allow_registration:yup.boolean().nullable(),
+    dynamic_registration:yup.boolean().nullable(),
+    registration_url:yup.string().nullable().when('dynamic_registration',{
+      is:true,
+      then: yup.string().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
+      otherwise: yup.string().nullable().matches(reg.regSimpleUrl,t('yup_url'))
+    }),
     scope:yup.array().nullable().when('protocol',{
       is:'oidc',
       then: yup.array().min(1,t('yup_select_option')).nullable().of(yup.string().required("Scope value cannot be empty").min(1,t('yup_scope')).max(256,t('yup_char_max') + ' ('+ 256 +')').matches(reg.regScope,t('yup_scope_reg'))).unique(t('yup_scope_unique')).required(t('yup_required'))
     }),
     grant_types:yup.array().nullable().when('protocol',{
       is:'oidc',
-      then: yup.array().min(1,t('yup_select_option')).nullable().of(yup.string().test('testGrantTypes','error-grant-types',function(value){return tenant.form_config.grant_types.includes(value)})).required(t('yup_select_option'))
+      then: yup.array().min(1,t('yup_select_option')).nullable().of(yup.string().test('testGrantTypes','error-grant-types',function(value){return oidcGrantTypeOptions.includes(value)})).required(t('yup_select_option'))
     }),
     id_token_timeout_seconds:yup.number().nullable().when('protocol',{
       is:'oidc',
@@ -533,7 +693,7 @@ const ServiceForm = (props)=> {
       })
     }).when(['token_endpoint_auth_method','grant_types'],{
       is:(token_endpoint_auth_method,grant_types)=> token_endpoint_auth_method==='none'&&grant_types.includes('authorization_code'),
-      then: yup.string().nullable().test('extra_validation',"PKCE must be enabled when no authentication is selected for the authorization code grant type.",function(value){return value})
+      then: yup.string().nullable().test('extra_validation',t('yup_pkce_required_with_none_auth'),function(value){return value})
     }),
     allow_introspection:yup.boolean().nullable().when('protocol',{
       is:'oidc',
@@ -555,10 +715,7 @@ const ServiceForm = (props)=> {
     }),
     client_secret:yup.string().nullable().when('protocol',{
       is:'oidc',
-      then: yup.string().nullable().when(['generate_client_secret','token_endpoint_auth_method'],{
-        is:(generate_client_secret,token_endpoint_auth_method)=> generate_client_secret===false&&!(token_endpoint_auth_method==='private_key_jwt'||token_endpoint_auth_method==='none'),
-        then: yup.string().nullable().required(t('yup_required')).min(4,t('yup_char_min') + ' ('+4+')').max(256,t('yup_char_max') + ' ('+256+')')
-      }).nullable()
+      then: yup.string().nullable().max(256,t('yup_char_max') + ' ('+256+')')
     }),
     metadata_url:yup.string().nullable().when('protocol',{
       is:'saml',
@@ -598,6 +755,22 @@ const ServiceForm = (props)=> {
       })
     
     }),
+    assertion_consumer_service:yup.string().nullable().when('protocol',{
+      is:'saml',
+      then:yup.string().nullable().matches(reg.regSimpleUrl,t('yup_url'))
+    }),
+    single_logout_service:yup.string().nullable().when('protocol',{
+      is:'saml',
+      then:yup.string().nullable().matches(reg.regSimpleUrl,t('yup_url'))
+    }),
+    signing_cert:yup.string().nullable().when('protocol',{
+      is:'saml',
+      then:yup.string().nullable()
+    }),
+    required_attributes:yup.array().nullable().when('protocol',{
+      is:'saml',
+      then:yup.array().min(1,t('yup_select_option')).of(yup.string().required())
+    }),
     token_endpoint_auth_signing_alg:yup.string().nullable().when(['protocol',"token_endpoint_auth_method"],{
       is:(protocol,token_endpoint_auth_method)=> protocol==='oidc'&&(token_endpoint_auth_method==="private_key_jwt"||token_endpoint_auth_method==="client_secret_jwt"),
       then: yup.string().required(t('yup_select_option')).test('testTokenEndpointSigningAlgorithm','Invalid Value',function(value){return tenant.form_config.token_endpoint_auth_signing_alg.includes(value)})
@@ -608,7 +781,7 @@ const ServiceForm = (props)=> {
     }),
     token_endpoint_auth_method:yup.string().nullable().when('protocol',{
       is:'oidc',
-      then: yup.string().nullable().required(t('yup_select_option')).test('testTokenEndpointAuthMethod','Invalid Value',function(value){return tenant.form_config.token_endpoint_auth_method.includes(value)})
+      then: yup.string().nullable().required(t('yup_select_option')).test('testTokenEndpointAuthMethod','Invalid Value',function(value){return oidcTokenEndpointMethodOptions.includes(value)})
     }),
     jwks_uri:yup.string().nullable().when(['protocol','token_endpoint_auth_method'],{
       is:(protocol,token_endpoint_auth_method)=> protocol==='oidc'&&token_endpoint_auth_method==="private_key_jwt" ,
@@ -1049,6 +1222,9 @@ const ServiceForm = (props)=> {
             values.jwks=null;
             values.jwks_uri=null;
           }
+          if(values.protocol==='oidc'){
+            values.generate_client_secret = true;
+          }
           if(values.token_endpoint_auth_method==="private_key_jwt"||values.token_endpoint_auth_method==="none"){
             values.client_secret = '';
           }
@@ -1378,7 +1554,7 @@ const ServiceForm = (props)=> {
                           <InputRow  moreInfo={tenant.form_config.more_info.organization_url} title="Organisation Website URL" required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} description="Link to the organization's website" error={errors.organization_url} touched={touched.organization_url}>
                             <SimpleInput
                               name='organization_url'
-                              placeholder={t('form_type_prompt')}
+                              placeholder={t('form_url_placeholder')}
                               onChange={handleChange}
                               value={values.organization_url}
                               isInvalid={hasSubmitted?!!errors.organization_url:(!!errors.organization_url&&touched.organization_url)}
@@ -1447,6 +1623,23 @@ const ServiceForm = (props)=> {
                         />
                       </InputRow>
 
+                      <InputRow title={t('form_terms_of_use_title')} required={values.integration_environment==='production'} error={errors.rp_accepted_tos} touched={touched.rp_accepted_tos} description={t('form_terms_of_use_desc')}>
+                        {values.infrastructures && values.infrastructures.length > 0 ?
+                          <div className='text-muted text-left mb-2'>
+                            {t('form_terms_of_use_applicable_terms')} {values.infrastructures.map((item)=>infrastructureTermUrls[item]?<a key={item} href={infrastructureTermUrls[item]} target='_blank' rel='noopener noreferrer' style={{marginRight:'12px'}}>{item}</a>:item)}
+                          </div>
+                        :null}
+                        <SimpleCheckbox
+                          name='rp_accepted_tos'
+                          label={t('form_terms_of_use_checkbox_label')}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          value={values.rp_accepted_tos}
+                          checked={values.rp_accepted_tos}
+                          disabled={disabled||values.integration_environment!=='production'}
+                          changed={props.changes?props.changes.rp_accepted_tos:null}
+                        />
+                      </InputRow>
 
                       {Object.entries(tenant.form_config.extra_fields).map(([name,field_data])=>{
                         field_data.name = name;                    
@@ -1484,24 +1677,6 @@ const ServiceForm = (props)=> {
                       </InputRow>
                       {values.protocol==='oidc'?
                         <React.Fragment>
-     
-                           <InputRow  moreInfo={tenant.form_config.more_info.client_id} title={t('form_client_id')} description={t('form_client_id_desc')} error={checkingAvailability?null:errors.client_id} touched={touched.client_id}>
-                            <SimpleInput
-                              name='client_id'
-                              placeholder={t('form_type_prompt')}
-                              onChange={(e)=>{
-                                setFieldTouched('client_id');
-                                handleChange(e);
-                              }}
-                              copybutton={props.copybutton}
-                              value={values.client_id}
-                              isInvalid={hasSubmitted?(!!errors.client_id&&!checkingAvailability):(!!errors.client_id&&touched.client_id&&!checkingAvailability)}
-                              onBlur={handleBlur}
-                              disabled={disabled||service_id}
-                              changed={props.changes?props.changes.client_id:null}
-                              isloading={values.client_id&&values.client_id!==checkedId&&checkingAvailability?1:0}
-                             />
-                           </InputRow>
                            <InputRow  moreInfo={tenant.form_config.more_info.application_type} title={'Application Type'} required={true} description={""} error={errors.application_type} touched={touched.application_type}>
                             <SimpleRadio
                               name='application_type'
@@ -1518,7 +1693,7 @@ const ServiceForm = (props)=> {
                               changed={props.changes?props.changes.application_type:null}
                              />
                            </InputRow>
-                           <InputRow  moreInfo={tenant.form_config.more_info.redirect_uris} title={t('form_redirect_uris')} required={values.grant_types.includes("implicit")||values.grant_types.includes("authorization_code")} error={typeof(errors.redirect_uris)==='string'?errors.redirect_uris:null}  touched={touched.redirect_uris} description={t('form_redirect_uris_desc')}>
+                           <InputRow  moreInfo={tenant.form_config.more_info.redirect_uris} title={t('form_redirect_uris')} required={values.grant_types.includes('authorization_code')} error={typeof(errors.redirect_uris)==='string'?errors.redirect_uris:null}  touched={touched.redirect_uris} description={t('form_redirect_uris_desc')}>
                              <ListInput
                                values={values.redirect_uris}
                                placeholder={t('form_type_prompt')}
@@ -1535,7 +1710,7 @@ const ServiceForm = (props)=> {
                              />
                            </InputRow>
                            {!tenant.form_config.disabled_fields.includes("post_logout_redirect_uris")?
-                              <InputRow  moreInfo={tenant.form_config.more_info.post_logout_redirect_uris} title={t('form_redirect_uris')} error={typeof(errors.post_logout_redirect_uris)==='string'?errors.post_logout_redirect_uris:null}  touched={touched.post_logout_redirect_uris} description={t('form_redirect_uris_desc')}>
+                              <InputRow  moreInfo={tenant.form_config.more_info.post_logout_redirect_uris} title={t('form_post_logout_redirect_uris_title')} error={typeof(errors.post_logout_redirect_uris)==='string'?errors.post_logout_redirect_uris:null}  touched={touched.post_logout_redirect_uris} description={t('form_post_logout_redirect_uris_desc')}>
                               <ListInput
                                 values={values.post_logout_redirect_uris}
                                 placeholder={t('form_type_prompt')}
@@ -1552,16 +1727,29 @@ const ServiceForm = (props)=> {
                               />
                             </InputRow>:null 
                           }
+                          {oidcResourceIndicatorsEnabled?
+                          <InputRow title={t('form_resource_indicators_title')} error={typeof(errors.resource_indicators)==='string'?errors.resource_indicators:null} touched={touched.resource_indicators} description={t('form_resource_indicators_desc')}>
+                            <ListInput
+                              values={values.resource_indicators}
+                              placeholder={t('form_type_prompt')}
+                              empty={(typeof(errors.resource_indicators)==='string')?true:false}
+                              name='resource_indicators'
+                              error={errors.resource_indicators}
+                              touched={touched.resource_indicators}
+                              onBlur={handleBlur}
+                              onChange={handleChange}
+                              setFieldTouched={setFieldTouched}
+                              disabled={disabled}
+                              changed={props.changes?props.changes.resource_indicators:null}
+                            />
+                          </InputRow>
+                          :null}
                           <InputRow  moreInfo={tenant.form_config.more_info.scope} title={t('form_scope')} required={true} description={t('form_scope_desc')} error={typeof(errors.scope)==='string'?errors.scope:null} touched={true}>
-                            <ListInputArray
+                            <CheckboxList
                               name='scope'
                               values={values.scope}
-                              placeholder={t('form_type_prompt')}
-                              defaultValues= {tenant.form_config.scope}
-                              error={errors.scope}
-                              touched={touched.scope}
                               disabled={disabled}
-                              onBlur={handleBlur}
+                              listItems={oidcScopeOptions}
                               changed={props.changes?props.changes.scope:null}
                             />
                           </InputRow>
@@ -1570,21 +1758,22 @@ const ServiceForm = (props)=> {
                             <CheckboxList
                               name='grant_types'
                               values={values.grant_types}
-                              listItems={tenant.form_config.grant_types}
+                              listItems={oidcGrantTypeOptions}
                               disabled={disabled}
-                              deprecated_options={tenant.form_config.grant_types_deprecated}
                               changed={props.changes?props.changes.grant_types:null}
                             />
                           </InputRow>
                          
-                          <InputRow  moreInfo={tenant.form_config.more_info.token_endpoint_auth_method} title="Token Endpoint Authorization Method" required={true} error={errors.token_endpoint_auth_method||errors.code_challenge_method} touched={touched.token_endpoint_auth_method}>
-                            <AuthMethRadioList
+                          <InputRow  moreInfo={tenant.form_config.more_info.token_endpoint_auth_method} title={t('form_token_endpoint_title')} required={true} error={errors.token_endpoint_auth_method||errors.code_challenge_method} touched={touched.token_endpoint_auth_method}>
+                            <SimpleRadio
                               name='token_endpoint_auth_method'
+                              onChange={handleChange}
                               values={values}
                               setFieldValue={setFieldValue}
-                              onChange={handleChange}
-                              radio_items={tenant.form_config.token_endpoint_auth_method}
-                              radio_items_titles={tenant.form_config.token_endpoint_auth_method_title}
+                              radio_items={oidcTokenEndpointMethodOptions}
+                              radio_items_titles={oidcTokenEndpointMethodTitles}
+                              value={values.token_endpoint_auth_method}
+                              className={'application-type-container'}
                               disabled={disabled}
                               changed={props.changes?props.changes.token_endpoint_auth_method:null}
                             />
@@ -1602,65 +1791,27 @@ const ServiceForm = (props)=> {
                               />
                             </div>
                           </InputRow>
-                          {values.token_endpoint_auth_method==='private_key_jwt'||values.token_endpoint_auth_method==='client_secret_jwt'?
-                          <InputRow  moreInfo={tenant.form_config.more_info.token_endpoint_auth_signing_alg} title="Token Endpoint Signing Algorithm" required={true} extraClass='select-col' error={errors.token_endpoint_auth_signing_alg} touched={touched.token_endpoint_auth_signing_alg}>
-                            <Select
-                              onBlur={handleBlur} 
-                              optionsTitle={tenant.form_config.token_endpoint_auth_signing_alg_title}
-                              options={tenant.form_config.token_endpoint_auth_signing_alg}
-                              default='RS256'
-                              name="token_endpoint_auth_signing_alg"
-                              values={values}
-                              isInvalid={hasSubmitted?!!errors.token_endpoint_auth_signing_alg_title:(!!errors.token_endpoint_auth_signing_alg&&touched.token_endpoint_auth_signing_alg)}
-                              onChange={handleChange}
-                              disabled={disabled}
-                              changed={props.changes?props.changes.token_endpoint_auth_signing_alg:null}
-                            />
-                          </InputRow>
-                        :null}
-                        
-                        {values.token_endpoint_auth_method==='private_key_jwt'?
-                          <InputRow  moreInfo={tenant.form_config.more_info.jwks} title="Public Key Set" required={true} extraClass='select-col' description="URL for the client's JSON Web Key set (must be reachable by the server)" error={errors.jwks?errors.jwks:errors.jwks_uri} touched={touched.jwks||touched.jwks_uri}>
-                            <PublicKey
-                              onBlur={handleBlur}
-                              values={values}
-                              setvalue={(field,value,validate)=>setFieldValue(field,value,validate)}
-                              isInvalid={hasSubmitted?errors.jwks_uri||errors.jwks:((errors.jwks_uri||errors.jwks)&&(touched.jwks||touched.jwks_uri))}
-                              datatype="json"
-                              onChange={handleChange}
-                              disabled={disabled}
-                              changed={props.changes&&(props.changes.jwks||props.changes.jwks_uri)?true:false}
-                            />
-                          </InputRow>
-                         :null}
-                       {!(values.token_endpoint_auth_method==='private_key_jwt'||values.token_endpoint_auth_method==='none')?
-                         <InputRow  moreInfo={tenant.form_config.more_info.client_secret} required={true} title={t('form_client_secret')}>
-                           <ClientSecret
-                             onChange={handleChange}
-                             client_secret={values.client_secret}
-                             error={errors.client_secret}
-                             touched={touched.client_secret}
-                             copybutton={props.copybutton}
-                             isInvalid={hasSubmitted?!!errors.client_secret:(!!errors.client_secret&&touched.client_secret)}
-                             onBlur={handleBlur}
-                             generate_client_secret={values.generate_client_secret}
-                             disabled={disabled}
-                             changed={props.changes?props.changes.client_secret:null}
-                           />
-                         </InputRow>
-                       :null}
-                          <InputRow  moreInfo={tenant.form_config.more_info.refresh_token_validity_seconds} required={values.scope.includes('offline_access')} title={t('form_refresh_token_validity_seconds')} extraClass='time-input' error={errors.refresh_token_validity_seconds} touched={touched.refresh_token_validity_seconds}>
-                            <RefreshToken
-                              values={values}
-                              onBlur={handleBlur}
-                              isInvalid={hasSubmitted?!!errors.refresh_token_validity_seconds:(!!errors.refresh_token_validity_seconds&&touched.refresh_token_validity_seconds)}
-                              onChange={handleChange}
-                              disabled={disabled}
-                              errors={errors}
-                              setFieldValue={setFieldValue}
-                              validateField={validateField}
-                              changed={props.changes}
-                            />
+                          <InputRow title={t('form_refresh_tokens_title')} required={false} description={t('form_refresh_tokens_desc')} error={errors.refresh_token_validity_seconds} touched={touched.scope || touched.refresh_token_validity_seconds}>
+                            <div className='simple_checkbox_container'>
+                              <SimpleCheckbox
+                                name='issue_refresh_tokens'
+                                label={t('form_refresh_tokens_checkbox_label')}
+                                checked={values.scope.includes('offline_access')}
+                                onChange={(e)=>{
+                                  const issueRefreshTokens = e.target.checked;
+                                  const currentScopes = Array.isArray(values.scope) ? values.scope : [];
+                                  const nextScopes = issueRefreshTokens
+                                    ? Array.from(new Set([...currentScopes, 'offline_access']))
+                                    : currentScopes.filter((scopeItem)=>scopeItem !== 'offline_access');
+                                  setFieldValue('scope', nextScopes, true);
+                                  if(issueRefreshTokens && (!values.refresh_token_validity_seconds || Number(values.refresh_token_validity_seconds) === 0)){
+                                    setFieldValue('refresh_token_validity_seconds', tenant.form_config.refresh_token_validity_seconds, false);
+                                  }
+                                }}
+                                disabled={disabled}
+                                changed={props.changes&&props.changes.scope?(props.changes.scope.D.includes('offline_access')||props.changes.scope.N.includes('offline_access')):false}
+                              />
+                            </div>
                           </InputRow>
                           <InputRow  moreInfo={tenant.form_config.more_info.device_code_validity_seconds} required={values.grant_types.includes('urn:ietf:params:oauth:grant-type:device_code')} title={t('form_device_code_validity_seconds')} extraClass='time-input' error={errors.device_code_validity_seconds} touched={touched.device_code_validity_seconds}>
                             <DeviceCode
@@ -1675,25 +1826,19 @@ const ServiceForm = (props)=> {
                               changed={props.changes}
                             />
                           </InputRow>
-                          <InputRow  moreInfo={tenant.form_config.more_info.code_challenge_method} required={true} title={t('form_code_challenge_method')} extraClass='select-col' error={errors.code_challenge_method} touched={touched.code_challenge_method}>
-                            <Select
-                              onBlur={handleBlur}
-                              optionsTitle={['PKCE will not be used for this service '+(values.grant_types.includes('authorization_code')?'(disabled)':''),'Plain code challenge (deprecated)','SHA-256 hash algorithm (recommended)']}
-                              options={['','plain','S256']}
-                              name="code_challenge_method"
-                              values={values}
-                              isInvalid={hasSubmitted?!!errors.code_challenge_method:(!!errors.code_challenge_method&&touched.code_challenge_method)}
+                          <InputRow  moreInfo={tenant.form_config.more_info.code_challenge_method} required={true} title={t('form_pkce_title')} error={errors.code_challenge_method} touched={touched.code_challenge_method}>
+                            <SimpleRadio
+                              name='code_challenge_method'
                               onChange={handleChange}
-                              setFieldValue={(value)=>{setFieldValue('code_challenge_method',value);}}
-                              recommended={'S256'}
+                              values={values}
+                              setFieldValue={setFieldValue}
+                              radio_items={oidcPkceOptions}
+                              radio_items_titles={oidcPkceTitles}
+                              value={values.code_challenge_method}
+                              className={'application-type-container'}
                               disabled={disabled}
-                              default={values.code_challenge_method?values.code_challenge_method:''}
                               changed={props.changes?props.changes.code_challenge_method:null}
                             />
-                            <div className='pkce-tooltip'>
-                              <FontAwesomeIcon icon={faExclamationTriangle}/>
-                              Enabling PKCE is highly recommended to avoid code injection and code replay attacks. If enabled, you need to make sure that your client uses PKCE to prevent errors
-                            </div>
                           </InputRow>
                           <InputRow  moreInfo={tenant.form_config.more_info.access_token_validity_seconds} required={true} title={t('form_access_token_validity_seconds')} extraClass='time-input' error={errors.access_token_validity_seconds} touched={touched.access_token_validity_seconds} description={t('form_access_token_validity_seconds_desc')}>
                             <TimeInput
@@ -1722,13 +1867,10 @@ const ServiceForm = (props)=> {
                     {values.protocol==='saml'?
                       <React.Fragment>
                         <ConfirmationModal 
-                          active={metadataLoaded.supported_attributes.length>0||(metadataLoaded.entity_id&&(!values.entity_id||values.entity_id!==metadataLoaded.entity_id))?true:false} 
+                          active={metadataLoaded.supported_attributes.length>0} 
                           close={()=>{
                             if(metadataLoaded.supported_attributes.length>0){
                               setMetadataLoaded({...metadataLoaded,supported_attributes:[]});
-                            }
-                            else if(metadataLoaded.entity_id){
-                              setMetadataLoaded({...metadataLoaded,entity_id:""});
                             }
                           }} 
                           action={()=>{
@@ -1736,19 +1878,12 @@ const ServiceForm = (props)=> {
                               setFieldValue('requested_attributes',metadataLoaded.supported_attributes)
                               setMetadataLoaded({...metadataLoaded,supported_attributes:[]});
                             }
-                            else{
-                              setFieldValue('entity_id',metadataLoaded.entity_id);
-                              setMetadataLoaded({...metadataLoaded,entity_id:""});
-                            }
                           }} 
                           title={
-                            metadataLoaded.supported_attributes.length>0?"Do you wish to load the requested attributes contained in the Metadata Url?":
-                            metadataLoaded.entity_id && !values.entity_id?"Do you wish to use the Entity Id contained in the Metadata Url?":
-                            metadataLoaded.entity_id && metadataLoaded.entity_id!==values.entity_id?"The Metadata Url contains a different Entity Id from the provided, do you wish to replace it?":"" 
+                            metadataLoaded.supported_attributes.length>0?"Do you wish to load the requested attributes contained in the Metadata Url?":"" 
                           } 
                           message={
                             metadataLoaded.supported_attributes.length>0?metadataLoaded.supported_attributes.length+ (metadataLoaded.unsupported_attributes.length>0?" out of " + (metadataLoaded.supported_attributes.length+metadataLoaded.unsupported_attributes.length):"")+ " attributes found are supported and can be added in the service configuration." :
-                            metadataLoaded.entity_id && (!values.entity_id||metadataLoaded.entity_id!==values.entity_id)?"Entity Id: "+metadataLoaded.entity_id:
                             null } 
                           accept={'Yes'} 
                           decline={'No'}/>
@@ -1790,26 +1925,74 @@ const ServiceForm = (props)=> {
                             />
                             <UrlWarning url={values.metadata_url} overwriteWarning={metadataWarning} disableCheck={1} touched={!!values.metadata_url}/>
                           </InputRow>
-                          {!tenant.form_config.more_info.requested_attributes.disabled?
-                            <InputRow  moreInfo={tenant.form_config.more_info.requested_attributes} title={tenant.form_config.more_info.requested_attributes.label||"Attributes"} required={false} description={tenant.form_config.more_info.requested_attributes.description} error={typeof(errors.scope)==='string'?errors.scope:null} touched={true}>
-                              <SamlAttributesInput
-                                name='requested_attributes'
-                                values={values.requested_attributes?values.requested_attributes:[]}
-                                placeholder={t('form_type_prompt')}
-                                defaultValues= {tenant.form_config.requested_attributes}
-                                errors={errors.requested_attributes}
-                                touched={touched.requested_attributes}
-                                setMetadataLoaded={setMetadataLoaded}
-                                disabled={disabled}
-                                setFieldValue={setFieldValue}
-                                onBlur={handleBlur}
-                                changed={props.changes?props.changes.requested_attributes:null}
-                              />
-                            </InputRow>
-                            :null
-                          }
+                          <InputRow title={t('form_saml_attributes_title')} required={true} error={typeof(errors.required_attributes)==='string'?errors.required_attributes:null} touched={true}>
+                            <CheckboxList
+                              name='required_attributes'
+                              values={values.required_attributes || []}
+                              listItems={(tenant?.form_config?.saml_ui?.attributes || ['openid','profile','email'])}
+                              disabled={disabled}
+                              changed={props.changes?props.changes.required_attributes:null}
+                            />
+                          </InputRow>
+                          <InputRow title={t('form_assertion_consumer_service')} error={errors.assertion_consumer_service} touched={touched.assertion_consumer_service}>
+                            <SimpleInput
+                              name='assertion_consumer_service'
+                              placeholder={t('form_url_placeholder')}
+                              onChange={handleChange}
+                              value={values.assertion_consumer_service || ''}
+                              isInvalid={hasSubmitted?!!errors.assertion_consumer_service:(!!errors.assertion_consumer_service&&touched.assertion_consumer_service)}
+                              onBlur={handleBlur}
+                              disabled={disabled}
+                              changed={props.changes?props.changes.assertion_consumer_service:null}
+                            />
+                          </InputRow>
+                          <InputRow title={t('form_single_logout_service')} error={errors.single_logout_service} touched={touched.single_logout_service}>
+                            <SimpleInput
+                              name='single_logout_service'
+                              placeholder={t('form_url_placeholder')}
+                              onChange={handleChange}
+                              value={values.single_logout_service || ''}
+                              isInvalid={hasSubmitted?!!errors.single_logout_service:(!!errors.single_logout_service&&touched.single_logout_service)}
+                              onBlur={handleBlur}
+                              disabled={disabled}
+                              changed={props.changes?props.changes.single_logout_service:null}
+                            />
+                          </InputRow>
+                          <InputRow title={t('form_signing_cert')} error={errors.signing_cert} touched={touched.signing_cert}>
+                            <TextAria
+                              value={values.signing_cert || ''}
+                              onChange={handleChange}
+                              onBlur={handleBlur}
+                              name='signing_cert'
+                              placeholder={t('form_type_prompt')}
+                              isInvalid={hasSubmitted ? !!errors.signing_cert : (!!errors.signing_cert && touched.signing_cert)}
+                              disabled={disabled}
+                              changed={props.changes ? props.changes.signing_cert : null}
+                            />
+                          </InputRow>
                        </React.Fragment>
                      :null}
+                    </Tab>
+                    <Tab eventKey="access_control" title={'Access Control'}>
+                      <AccessControlTab
+                        values={values}
+                        errors={errors}
+                        touched={touched}
+                        setFieldValue={setFieldValue}
+                        handleChange={handleChange}
+                        handleBlur={handleBlur}
+                        disabled={disabled}
+                        hasSubmitted={hasSubmitted}
+                      />
+                    </Tab>
+                    <Tab eventKey="managers" title={'Managers'}>
+                      <ManagersTab
+                        tenantName={tenant_name}
+                        serviceId={service_id}
+                        serviceName={values.service_name}
+                        groupId={values.group_id || props.initialValues.group_id}
+                        disabled={disabled}
+                      />
                     </Tab>
                   </Tabs>
                   </div>
@@ -2100,11 +2283,14 @@ const UrlWarning = (props) => {
   )
 }
 function generateValues(data){
-
-
-  if(data.generate_client_secret&&data.protocol==='oidc'){
-    data.client_secret= hex(87);
-    data.generate_client_secret = false;
+  if(data.protocol==='oidc'){
+    if(!data.client_id){
+      data.client_id = hex(24);
+    }
+    if(!data.client_secret){
+      data.client_secret = hex(87);
+    }
+    data.generate_client_secret = true;
   }
   return data
 }

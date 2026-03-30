@@ -639,10 +639,16 @@ export function Select(props){
   const [show, setShow] = useState(false);
   const target = useRef(null);
   useEffect(()=>{
-    if(props.disabled_option===props.values[props.name]){
+    // Only auto-fix value when all control props are explicitly provided.
+    if(
+      props.disabled_option !== undefined &&
+      typeof props.setFieldValue === 'function' &&
+      props.recommended !== undefined &&
+      props.values?.[props.name] === props.disabled_option
+    ){
       props.setFieldValue(props.recommended)
     }
-  },[props,props.disabled_option,props.values])
+  },[props.disabled_option, props.name, props.recommended, props.setFieldValue, props.values])
 
   return(
     <React.Fragment>
@@ -700,6 +706,7 @@ export function CheckboxList(props){
   const [added,setAdded] = useState([]);
   const [deleted,setDeleted] = useState([]);
   const [existing,setExisting] = useState([]);
+  const deprecatedOptions = props.deprecated_options || [];
   useEffect(()=>{
 
     let add = [];
@@ -756,7 +763,7 @@ export function CheckboxList(props){
                     return(
                       <div className="checkboxList" key={index}>
                       <Checkbox name={props.name} disabled={props.disabled} value={item}/>
-                      {item.length>33&&(item.substr(0,33)==="urn:ietf:params:oauth:grant-type:"||item.substr(0,33)==="urn:ietf:params:oauth:grant_type:")?item.substr(33).replace("_"," "):item.replace("_"," ")}{props.deprecated_options.includes(item)? ' (deprecated)':''}
+                      {item.length>33&&(item.substr(0,33)==="urn:ietf:params:oauth:grant-type:"||item.substr(0,33)==="urn:ietf:params:oauth:grant_type:")?item.substr(33).replace("_"," "):item.replace("_"," ")}{deprecatedOptions.includes(item)? ' (deprecated)':''}
                       </div>
                     );
 
@@ -1068,7 +1075,7 @@ export function ListInputArray(props){
           <FieldArray
             name={props.name}
             render={arrayHelpers =>(
-              props.values.map((item,index)=>{
+              (props.values || []).map((item,index)=>{
                 if(!props.defaultValues.includes(item)){
                   return(
                     <React.Fragment key={index}>
@@ -1391,6 +1398,13 @@ export function Contacts(props){
   const [newVal,setNewVal] = useState('');
   const [newVal2,setNewVal2] = useState('admin');
   const [tenant] = useContext(tenantContext);
+  const contactTypeLabels = {
+    admin: 'Admin',
+    technical: 'Technical',
+    support: 'Support (User-facing)',
+    security: 'Security'
+  };
+  const contactOptions = tenant?.form_config?.contact_types || ['admin', 'technical', 'support', 'security'];
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   return (
@@ -1416,8 +1430,8 @@ export function Contacts(props){
                             setNewVal2(e.target.value)
                           }}>
                             <React.Fragment>
-                              {tenant.form_config.contact_types.map((item,index) => {
-                                  return <option key={index} value={item}>{capitalize(item)}</option>
+                              {contactOptions.map((item,index) => {
+                                  return <option key={index} value={item}>{contactTypeLabels[item] || capitalize(item)}</option>
                                 })
                               }
                             </React.Fragment>
@@ -1454,6 +1468,141 @@ export function Contacts(props){
 }
 
 
+export function ServicePolicies(props){
+
+  const hasPolicyTypeOptions = Array.isArray(props.policyTypeOptions) && props.policyTypeOptions.length > 0;
+  const [newName,setNewName] = useState(hasPolicyTypeOptions ? props.policyTypeOptions[0].value : '');
+  const [newUrl,setNewUrl] = useState('');
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
+  return (
+        <FieldArray name={props.name}>
+          {({push,remove})=> (
+            <React.Fragment>
+              {!props.disabled?
+                <React.Fragment>
+                  <InputGroup className={props.empty&&props.touched?'invalid-input mb-3':'mb-3'}>
+                    <Form.Control
+                      value={newUrl}
+                      onChange={(e)=>{setNewUrl(e.target.value)}}
+                      column="true"
+                      sm="4"
+                      type="text"
+                      className='col-form-label.sm'
+                      placeholder='https://'
+                      disabled={props.disabled}
+                    />
+                    {hasPolicyTypeOptions?
+                    <Form.Control
+                      as="select"
+                      value={newName}
+                      onChange={(e)=>{setNewName(e.target.value)}}
+                      className='input-hide'
+                      onBlur={()=>{!props.touched&&props.setFieldTouched(props.name,true)}}
+                      disabled={props.disabled}
+                    >
+                      {props.policyTypeOptions.map((policyType,policyTypeIndex)=>(
+                        <option key={policyTypeIndex} value={policyType.value}>{policyType.label}</option>
+                      ))}
+                    </Form.Control>
+                    :
+                    <Form.Control
+                      value={newName}
+                      onChange={(e)=>{setNewName(e.target.value)}}
+                      column="true"
+                      sm="4"
+                      onBlur={()=>{!props.touched&&props.setFieldTouched(props.name,true)}}
+                      type="text"
+                      className='col-form-label.sm'
+                      placeholder='Policy name'
+                      disabled={props.disabled}
+                    />
+                    }
+                    <InputGroup.Prepend>
+                      <Button
+                        disabled={props.disabled}
+                        variant="outline-primary"
+                        onClick={()=>{
+                          push({name:newName,url:newUrl});
+                          setNewName(hasPolicyTypeOptions ? props.policyTypeOptions[0].value : '');
+                          setNewUrl('');
+                        }}
+                      >
+                        {t('input_add_button')}
+                      </Button>
+                    </InputGroup.Prepend>
+                  </InputGroup>
+                </React.Fragment>
+                :null}
+
+              {props.values && props.values.length > 0 && props.values.map((item,index)=> (
+                <React.Fragment key={index}>
+                  <InputGroup className="spacing-bot-contact">
+                    <Field name={`${props.name}.${index}.url`}>
+                      {({field})=> (
+                        <Form.Control
+                          {...field}
+                          onBlur={props.handleBlur}
+                          onChange={props.onChange}
+                          isInvalid={Array.isArray(props.error)&&props.error[index]?true:false}
+                          column="true"
+                          sm="4"
+                          type="text"
+                          className='col-form-label.sm'
+                          placeholder='https://'
+                          disabled={props.disabled}
+                        />
+                      )}
+                    </Field>
+                    <Field name={`${props.name}.${index}.name`}>
+                      {({field})=> (
+                        hasPolicyTypeOptions?
+                        <Form.Control
+                          {...field}
+                          as="select"
+                          onBlur={props.handleBlur}
+                          onChange={props.onChange}
+                          isInvalid={Array.isArray(props.error)&&props.error[index]?true:false}
+                          className='input-hide'
+                          disabled={props.disabled}
+                        >
+                          {props.policyTypeOptions.map((policyType,policyTypeIndex)=>(
+                            <option key={policyTypeIndex} value={policyType.value}>{policyType.label}</option>
+                          ))}
+                        </Form.Control>
+                        :
+                        <Form.Control
+                          {...field}
+                          onBlur={props.handleBlur}
+                          onChange={props.onChange}
+                          isInvalid={Array.isArray(props.error)&&props.error[index]?true:false}
+                          column="true"
+                          sm="4"
+                          type="text"
+                          className='col-form-label.sm'
+                          placeholder='Policy name'
+                          disabled={props.disabled}
+                        />
+                      )}
+                    </Field>
+                    {!props.disabled?
+                      <InputGroup.Prepend>
+                        <Button disabled={props.disabled} variant="outline-danger" onClick={()=>{remove(index)}}>{t('input_remove_button')}</Button>
+                      </InputGroup.Prepend>
+                      :null}
+                  </InputGroup>
+                  {props.error&&Array.isArray(props.error)&&props.error[index]?
+                    <div className="error-message-list-item">{props.error[index].name||props.error[index].url}</div>
+                  :null}
+                </React.Fragment>
+              ))}
+            </React.Fragment>
+          )}
+        </FieldArray>
+  )
+}
+
+
 // const [show, setShow] = useState(false);
 // const target = useRef(null);
 
@@ -1466,6 +1615,13 @@ function ContactInput(props){
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   const [tenant] = useContext(tenantContext);
+  const contactTypeLabels = {
+    admin: 'Admin',
+    technical: 'Technical',
+    support: 'Support (User-facing)',
+    security: 'Security'
+  };
+  const contactOptions = tenant?.form_config?.contact_types || ['admin', 'technical', 'support', 'security'];
 
   useEffect(()=>{
     if(props.changed){
@@ -1518,8 +1674,8 @@ function ContactInput(props){
             onBlur={props.handleBlur}
             onChange={props.onChange}
           >
-            {tenant.form_config.contact_types.map((item,index) => {
-                return <option key={index} value={item}>{capitalize(item)}</option>
+            {contactOptions.map((item,index) => {
+                return <option key={index} value={item}>{contactTypeLabels[item] || capitalize(item)}</option>
               })
             }
           </Form.Control>
