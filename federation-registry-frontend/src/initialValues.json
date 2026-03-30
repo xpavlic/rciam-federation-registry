@@ -22,6 +22,7 @@
   "website_url": "",
   "redirect_uris": [],
   "post_logout_redirect_uris": [],
+  "resource_indicators": [],
   "logo_uri":"",
   "policy_uri":"",
   "integration_environment":"development",
@@ -29,6 +30,14 @@
   "contacts":[],
   "metadata_url":"",
   "entity_id":"",
+  "assertion_consumer_service":"",
+  "single_logout_service":"",
+  "signing_cert":"",
+  "required_attributes": [
+    "openid",
+    "profile",
+    "email"
+  ],
   "client_id":"",
   "allow_introspection":false,
   "token_endpoint_auth_method":"client_secret_basic",
@@ -44,10 +53,7 @@
   "scope": [
     "openid",
     "profile",
-    "email",
-    "voperson_id",
-    "eduperson_entitlement",
-    "voperson_external_affiliation"
+    "email"
   ],
   "grant_types": [
     "authorization_code"
