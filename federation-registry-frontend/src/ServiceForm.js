@@ -1603,22 +1603,52 @@ const ServiceForm = (props)=> {
                         />
                       </InputRow>
 
-                      <InputRow title={t('form_terms_of_use_title')} required={values.integration_environment==='production'} error={errors.rp_accepted_tos} touched={touched.rp_accepted_tos} description={t('form_terms_of_use_desc')}>
-                        {values.infrastructures && values.infrastructures.length > 0 ?
-                          <div className='text-muted text-left mb-2'>
-                            {t('form_terms_of_use_applicable_terms')} {values.infrastructures.map((item)=>infrastructureTermUrls[item]?<a key={item} href={infrastructureTermUrls[item]} target='_blank' rel='noopener noreferrer' style={{marginRight:'12px'}}>{item}</a>:item)}
-                          </div>
-                        :null}
-                        <SimpleCheckbox
+                      <InputRow 
+                        title={t('form_terms_of_use_title')} 
+                        required={values.integration_environment === 'production'} 
+                        error={errors.rp_accepted_tos} 
+                        touched={touched.rp_accepted_tos}
+                      >
+                        <div className='text-muted text-left mb-2'>
+                          {t('form_terms_of_use_desc', 'By marking the checkbox, you confirm that you recognise and comply with the Terms of Use for Service Providers.')}
+                        </div>
+
                           name='rp_accepted_tos'
-                          label={t('form_terms_of_use_checkbox_label')}
+                          label={
+                            <span>
+                              {/* Prefix text */}
+                              {t('form_terms_of_use_checkbox_prefix', 'I have read and accept the ')}
+                              
+                              {values.infrastructures && values.infrastructures.length > 0 ? (
+                                values.infrastructures.map((item, index) => {
+                                  const isLast = index === values.infrastructures.length - 1;
+                                  const isSecondToLast = index === values.infrastructures.length - 2;
+                                  
+                                  return (
+                                    <React.Fragment key={item}>
+                                      {infrastructureTermUrls[item] ? (
+                                        <a href={infrastructureTermUrls[item]} target='_blank' rel='noopener noreferrer'>
+                                          {item} Terms of Use for Service Providers
+                                        </a>
+                                      ) : (
+                                        <span>{item} Terms of Use for Service Providers</span>
+                                      )}
+                                      
+                                      {!isLast && (isSecondToLast ? ' and ' : ', ')}
+                                    </React.Fragment>
+                                  );
+                                })
+                              ) : (
+                                <span>Terms of Use for Service Providers</span>
+                              )}
+                            </span>
+                          }
                           onChange={handleChange}
                           onBlur={handleBlur}
                           value={values.rp_accepted_tos}
                           checked={values.rp_accepted_tos}
-                          disabled={disabled||values.integration_environment!=='production'}
-                          changed={props.changes?props.changes.rp_accepted_tos:null}
-                        />
+                          disabled={disabled || values.integration_environment !== 'production'}
+                          changed={props.changes ? props.changes.rp_accepted_tos : null}
                       </InputRow>
 
                       {Object.entries(tenant.form_config.extra_fields).map(([name,field_data])=>{
