@@ -128,7 +128,7 @@
     "form_organization_desc":"Search for your organisation",
     "form_organization_placeholder":"Type the name of your organization",
     "form_organization_url_title":"Organisation Website URL",
-    "form_organization_url_desc":"Link to the organization's website",
+    "form_organization_url_desc":"Your organisation’s website with more information about the service and its provider.",
     "form_contacts":"Contacts",
     "form_contacts_desc":"List of contacts for administrators of this service.",
     "form_protocol":"Select Protocol",
