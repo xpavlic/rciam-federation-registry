@@ -34,17 +34,25 @@ class ServicePoliciesRepository {
       table = 'service_petition_policies';
     }
     const tableName = new this.pgp.helpers.TableName({ table });
-    let values = '';
     if (data.length > 0) {
-      data.forEach((item) => {
-        values = values + "('" + item.name + "','" + item.url + "','" + (item.url_czech || item.url) + "'),";
-      });
-      values = values.slice(0, -1);
-      return this.db.none('DELETE FROM $3 WHERE owner_id=$1 AND (name,url,COALESCE(url_czech,url)) IN ($2^)', [
-        +owner_id,
-        values,
-        tableName
-      ]);
+      const valuesData = data.map((item) => ({
+        name: item.name,
+        url: item.url,
+        url_czech_or_url: item.url_czech || item.url
+      }));
+      const csDelete = new this.pgp.helpers.ColumnSet(
+        ['name', 'url', { name: 'url_czech_or_url' }],
+        { table: null }
+      );
+      const values = this.pgp.helpers.values(valuesData, csDelete);
+      return this.db.none(
+        'DELETE FROM $3 WHERE owner_id=$1 AND (name,url,COALESCE(url_czech,url)) IN ($2:raw)',
+        [
+          +owner_id,
+          values,
+          tableName
+        ]
+      );
     }
     return null;
   }
