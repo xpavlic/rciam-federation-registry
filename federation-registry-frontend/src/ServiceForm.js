@@ -380,8 +380,8 @@ const ServiceForm = (props)=> {
   ));
 
   const schema = yup.object({
-    service_name:yup.string().nullable().min(4,t('yup_char_min') + ' ('+2+')').max(255,t('yup_char_max') + ' ('+255+')').required(t('yup_required')),
-    service_name_czech:yup.string().nullable().min(4,t('yup_char_min') + ' ('+2+')').max(255,t('yup_char_max') + ' ('+255+')').required(t('yup_required')),
+    service_name:yup.string().nullable().min(4,t('yup_char_min') + ' ('+4+')').max(55,t('yup_char_max') + ' ('+55+')').required(t('yup_required')),
+    service_name_czech:yup.string().nullable().min(4,t('yup_char_min') + ' ('+4+')').max(55,t('yup_char_max') + ' ('+55+')').required(t('yup_required')),
     // Every time client_id changes we make a fetch request to see if it is available.
     policy_uri:yup.string().nullable().when('integration_environment',{
       is:(integrationEnvironment)=> tenant.form_config.more_info.policy_uri?.required?.includes(integrationEnvironment),
