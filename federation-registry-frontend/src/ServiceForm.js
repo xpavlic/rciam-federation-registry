@@ -1394,7 +1394,7 @@ const ServiceForm = (props)=> {
                         title={t('form_service_name')} 
                         required={true} 
                         description={t('form_service_name_desc')} 
-                        error={(errors.service_name || errors.service_name_czech) ? "Both English and Czech names are required" : null} 
+                                            error={(errors.service_name || errors.service_name_czech) ? t('form_service_name_bilingual_error') : null} 
                         touched={touched.service_name || touched.service_name_czech}
                       >
                         {/* English Input */}
@@ -1420,7 +1420,7 @@ const ServiceForm = (props)=> {
                           <div className="flex-grow-1">
                             <SimpleInput
                               name='service_name_czech'
-                              placeholder="Název služby" // Optional: Czech placeholder
+                              placeholder={t('form_service_name_czech_placeholder')}
                               onChange={handleChange}
                               value={values.service_name_czech || ''}
                               isInvalid={hasSubmitted ? !!errors.service_name_czech : (!!errors.service_name_czech && touched.service_name_czech)}
@@ -1437,7 +1437,7 @@ const ServiceForm = (props)=> {
                       title={t('form_description')} 
                       required={true} 
                       description={t('form_description_desc')} 
-                      error={(errors.service_description || errors.service_description_czech) ? "Both descriptions are required" : null} 
+                      error={(errors.service_description || errors.service_description_czech) ? t('form_service_description_bilingual_error') : null} 
                       touched={touched.service_description || touched.service_description_czech}
                     >
                       {/* English Input */}
@@ -1466,7 +1466,7 @@ const ServiceForm = (props)=> {
                             onChange={handleChange}
                             onBlur={handleBlur}
                             name='service_description_czech'
-                            placeholder="Popis služby"
+                            placeholder={t('form_service_description_czech_placeholder')}
                             isInvalid={hasSubmitted ? !!errors.service_description_czech : (!!errors.service_description_czech && touched.service_description_czech)}
                             disabled={disabled}
                             changed={props.changes ? props.changes.service_description_czech : null}
@@ -1477,10 +1477,10 @@ const ServiceForm = (props)=> {
 
                     <InputRow 
                       moreInfo={tenant.form_config.more_info.service_login_url} 
-                      title="Service login URL" 
+                      title={t('form_service_login_url')} 
                       required={true}
                       description={tenant.form_config.more_info.service_login_url?.description}
-                      error={errors.service_login_url || errors.service_login_url_czech ? "Provide valid URLs for both languages" : null}
+                      error={errors.service_login_url || errors.service_login_url_czech ? t('form_service_login_url_bilingual_error') : null}
                       touched={touched.service_login_url || touched.service_login_url_czech}
                     >
                       {/* English Input */}
@@ -1567,8 +1567,21 @@ const ServiceForm = (props)=> {
                         <UrlWarning url={values.website_url} touched={hasSubmitted||touched.website_url}/> 
                      </InputRow>
 
+                      <InputRow hide={!tenant?.form_config?.more_info?.country?.enabled} moreInfo={tenant.form_config.more_info.country.description} title={t('form_jurisdiction_service_title')} required={tenant?.form_config?.more_info?.country?.required.includes(values.integration_environment) && tenant.form_config.more_info.country.enabled} extraClass='select-col' error={errors.country} touched={touched.country}>
+                        <CountrySelect
+                          onBlur={handleBlur}
+                          placeholder={t('form_country_placeholder')}
+                          name="country"
+                          values={values}
+                          isInvalid={hasSubmitted?!!errors.country:(!!errors.country&&touched.country)}
+                          onChange={handleChange}
+                          disabled={disabled}
+                          changed={props.changes?props.changes.country:null}
+                        />
+                      </InputRow>
+
                   {tenant.form_config.extra_fields.infrastructures ?
-                  <InputRow  moreInfo={tenant.form_config.more_info.infrastructures} title={'Infrastructures'} required={tenant.form_config.extra_fields.infrastructures.required.includes(values.integration_environment)} error={typeof(errors.infrastructures)==='string'?errors.infrastructures:null} touched={touched.infrastructures} description={'Select the infrastructures supported by your service.'}>
+                  <InputRow  moreInfo={tenant.form_config.more_info.infrastructures} title={t('form_infrastructures_title')} required={tenant.form_config.extra_fields.infrastructures.required.includes(values.integration_environment)} error={typeof(errors.infrastructures)==='string'?errors.infrastructures:null} touched={touched.infrastructures} description={t('form_infrastructures_desc')}>
                     <CheckboxList
                       name='infrastructures'
                       values={values.infrastructures}
@@ -1583,11 +1596,11 @@ const ServiceForm = (props)=> {
 
                   <InputRow 
                     moreInfo={tenant.form_config.more_info.service_policies} 
-                    title={'Service Policies'} 
+                    title={t('form_service_policies_title')} 
                     required={true} 
-                    error={Array.isArray(errors.service_policies) || Array.isArray(errors.service_policies_czech) ? 'Please provide valid policy URL and type for both languages' : ''} 
+                    error={Array.isArray(errors.service_policies) || Array.isArray(errors.service_policies_czech) ? t('form_service_policies_bilingual_error') : ''} 
                     touched={touched.service_policies || touched.service_policies_czech} 
-                    description={'Add policy URL and select policy type.'}
+                    description={t('form_service_policies_desc')}
                   >
                     {/* English Input */}
                     <div className="d-flex align-items-start mb-3">
@@ -1644,10 +1657,10 @@ const ServiceForm = (props)=> {
                       </InputRow>
                       {tenant.form_config.extra_fields.organization&&!tenant?.form_config?.extra_fields?.organization?.hide.includes(values.integration_environment)?
                       <React.Fragment>
-                        <InputRow  moreInfo={tenant.form_config.more_info.organization_name} required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} title="Organisation" description="Search for your organisation" error={errors.organization_name} touched={touched.organization_name}>
+                        <InputRow  moreInfo={tenant.form_config.more_info.organization_name} required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} title={t('form_organization_title')} description={t('form_organization_desc')} error={errors.organization_name} touched={touched.organization_name}>
                             <OrganizationField
                               name='organization_name'
-                              placeholder='Type the name of your organization'
+                              placeholder={t('form_organization_placeholder')}
                               onChange={handleChange}
                               values={values}
                               isInvalid={hasSubmitted?!!errors.organization_name:(!!errors.organization_name&&touched.organization_name)}
@@ -1663,7 +1676,7 @@ const ServiceForm = (props)=> {
                         </React.Fragment>
                         :null
                       }
-                    <InputRow  moreInfo={tenant.form_config.more_info.organization_url} title="Organisation Website URL" required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} description="Link to the organization's website" error={errors.organization_url} touched={touched.organization_url}>
+                    <InputRow  moreInfo={tenant.form_config.more_info.organization_url} title={t('form_organization_url_title')} required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} description={t('form_organization_url_desc')} error={errors.organization_url} touched={touched.organization_url}>
                         <SimpleInput
                             name='organization_url'
                             placeholder={t('form_url_placeholder')}
