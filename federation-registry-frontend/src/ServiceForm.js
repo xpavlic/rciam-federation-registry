@@ -2406,7 +2406,7 @@ function generateValues(data){
     if(!data.client_id){
       data.client_id = hex(24);
     }
-    if(!data.client_secret){
+    if(!data.client_secret && !['none', 'private_key_jwt'].includes(data.token_endpoint_auth_method)){
       data.client_secret = hex(87);
     }
     data.generate_client_secret = true;
