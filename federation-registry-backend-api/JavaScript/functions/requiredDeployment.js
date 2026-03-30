@@ -26,6 +26,10 @@ function requiredDeployment(old_values,new_values){
     post_logout_redirect_uris: {
       D:[],
       N:[]
+    },
+    service_policies: {
+      D:[],
+      N:[]
     }
   };
 
@@ -77,6 +81,30 @@ function requiredDeployment(old_values,new_values){
           edits.contacts.N[index] = {email:items[0],type:items[1]};
       })
     }
+
+    if(!old_values.service_policies){
+      old_values.service_policies = [];
+    }
+    if(!new_values.service_policies){
+      new_values.service_policies = [];
+    }
+    const oldPolicies = old_values.service_policies.map((item)=>{
+      const url_czech = item.url_czech || item.url;
+      return item.name + '|||' + item.url + '|||' + url_czech;
+    });
+    const newPolicies = new_values.service_policies.map((item)=>{
+      const url_czech = item.url_czech || item.url;
+      return item.name + '|||' + item.url + '|||' + url_czech;
+    });
+    edits.service_policies.N = newPolicies.filter(x=>!oldPolicies.includes(x)).map((item)=>{
+      const values = item.split('|||');
+      return {name: values[0], url: values[1], url_czech: values[2] || values[1]};
+    });
+    edits.service_policies.D = oldPolicies.filter(x=>!newPolicies.includes(x)).map((item)=>{
+      const values = item.split('|||');
+      return {name: values[0], url: values[1], url_czech: values[2] || values[1]};
+    });
+
     if(new_values.protocol==='oidc'){
       if(!old_values.redirect_uris){
         old_values.redirect_uris = [];
@@ -132,6 +160,9 @@ function requiredDeployment(old_values,new_values){
 
     if(edits.contacts&&edits.contacts.N.length===0&&edits.contacts.D.length===0){
       delete edits.contacts;
+    }
+    if(edits.service_policies&&edits.service_policies.N.length===0&&edits.service_policies.D.length===0){
+      delete edits.service_policies;
     }
     if(edits.redirect_uris&&edits.redirect_uris.N.length===0&&edits.redirect_uris.D.length===0){
       delete edits.redirect_uris;

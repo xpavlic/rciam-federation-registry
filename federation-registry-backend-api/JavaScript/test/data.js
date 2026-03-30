@@ -8,7 +8,8 @@ const create = {
      service_description_czech: "Toto je testovací popis",
      service_policies: [{
         "name": "Privacy Policy",
-        "url": "https://example.com/policy"
+        "url": "https://example.com/policy",
+        "url_czech": "https://example.com/cs/policy"
         }
      ],
      redirect_uris: ["https://redirecturi1.com"],
@@ -76,7 +77,8 @@ const create = {
      service_description_czech: "Toto je testovací popis",
      service_policies: [{
         "name": "Privacy Policy",
-        "url": "https://example.com/policy"
+        "url": "https://example.com/policy",
+        "url_czech": "https://example.com/cs/policy"
         }
      ],
      redirect_uris: null,
@@ -130,7 +132,8 @@ const edit = {
     "service_description_czech": "Toto je zmenený testovací popis",
     "service_policies": [{
       "name": "Privacy Policy",
-      "url": "https://example.com/policy"
+      "url": "https://example.com/policy",
+      "url_czech": "https://example.com/cs/policy"
     }
     ],
    "redirect_uris":[
@@ -200,7 +203,8 @@ const edit = {
    service_description_czech: "Toto je testovací popis",
    service_policies: [{
     "name": "Privacy Policy",
-    "url": "https://example.com/policy"
+    "url": "https://example.com/policy",
+    "url_czech": "https://example.com/cs/policy"
     }
    ],
    service_name:"Test Saml Service edit",

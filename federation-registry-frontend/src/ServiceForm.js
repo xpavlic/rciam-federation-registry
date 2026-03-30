@@ -123,6 +123,57 @@ const ServiceForm = (props)=> {
   const oidcDefaultScopes = oidcUiConfig.default_scopes || tenant?.client_scopes || ['openid', 'profile', 'email'];
   const oidcResourceIndicatorsEnabled = oidcUiConfig.resource_indicators_enabled !== false;
 
+  const normalizePolicyValues = (policies)=>{
+    if(!Array.isArray(policies)){
+      return [];
+    }
+    return policies
+      .filter((item)=>item && typeof item.name === 'string' && typeof item.url === 'string')
+      .map((item)=>({
+        name: item.name,
+        url: item.url,
+        url_czech: typeof item.url_czech === 'string' && item.url_czech ? item.url_czech : item.url
+      }));
+  };
+
+  const splitPolicyValuesForForm = (policies)=>{
+    const normalized = normalizePolicyValues(policies);
+    return {
+      service_policies: normalized.map((item)=>({name: item.name, url: item.url})),
+      service_policies_czech: normalized.map((item)=>({name: item.name, url: item.url_czech}))
+    };
+  };
+
+  const mergePolicyValuesForApi = (englishPolicies, czechPolicies)=>{
+    const englishByType = {};
+    const czechByType = {};
+
+    normalizePolicyValues(englishPolicies).forEach((item)=>{
+      englishByType[item.name] = item.url;
+    });
+    normalizePolicyValues(czechPolicies).forEach((item)=>{
+      czechByType[item.name] = item.url;
+    });
+
+    const policyTypes = Array.from(new Set([...Object.keys(englishByType), ...Object.keys(czechByType)]));
+    return policyTypes
+      .map((name)=>{
+        const url = englishByType[name] || czechByType[name];
+        const url_czech = czechByType[name] || englishByType[name];
+        return {name, url, url_czech};
+      })
+      .filter((item)=>item.name && item.url);
+  };
+
+  const hasSamePolicyTypes = (firstList, secondList)=>{
+    const first = (Array.isArray(firstList) ? firstList : []).map((item)=>item?.name).filter(Boolean).sort();
+    const second = (Array.isArray(secondList) ? secondList : []).map((item)=>item?.name).filter(Boolean).sort();
+    if(first.length !== second.length){
+      return false;
+    }
+    return first.every((value,index)=>value === second[index]);
+  };
+
   useEffect(()=>{
     //Get tags 
     if(props.user.actions.includes('manage_tags')&&service_id){
@@ -198,6 +249,16 @@ const ServiceForm = (props)=> {
     }
     if(!props.initialValues.registration_url){
       props.initialValues.registration_url = '';
+    }
+
+    const splitPolicies = splitPolicyValuesForForm(props.initialValues.service_policies);
+    props.initialValues.service_policies = splitPolicies.service_policies;
+    if(Array.isArray(props.initialValues.service_policies_czech) && props.initialValues.service_policies_czech.length > 0){
+      props.initialValues.service_policies_czech = normalizePolicyValues(props.initialValues.service_policies_czech)
+        .map((item)=>({name: item.name, url: item.url}));
+    }
+    else{
+      props.initialValues.service_policies_czech = splitPolicies.service_policies_czech;
     }
 
     if(props.initialValues.protocol === 'oidc'){
@@ -378,6 +439,16 @@ const ServiceForm = (props)=> {
       }
     })
   ));
+
+  const policySchema = yup.object().shape({
+    name:yup.string().nullable().required(t('yup_required')).test('testPolicyTypeValue','Invalid policy type',function(value){
+      if(policyTypeValues.length === 0){
+        return true;
+      }
+      return policyTypeValues.includes(value);
+    }),
+    url:yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url'))
+  });
 
   const schema = yup.object({
     service_name:yup.string().nullable().min(4,t('yup_char_min') + ' ('+4+')').max(55,t('yup_char_max') + ' ('+55+')').required(t('yup_required')),
@@ -582,20 +653,23 @@ const ServiceForm = (props)=> {
       then: yup.array().min(1, 'Select at least one infrastructure').of(yup.string()),
       otherwise: yup.array().nullable().of(yup.string())
     }),
-    service_policies:yup.array().nullable().of(yup.object().shape({
-      name:yup.string().nullable().required(t('yup_required')).test('testPolicyTypeValue','Invalid policy type',function(value){
-        if(policyTypeValues.length === 0){
-          return true;
-        }
-        return policyTypeValues.includes(value);
-      }),
-      url:yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url'))
-    })).test('testPolicyTypesUnique','Policy type must be unique',function(value){
+    service_policies:yup.array().nullable().of(policySchema).test('testPolicyTypesUnique','Policy type must be unique',function(value){
       if(!value){
         return true;
       }
       const uniqueTypes = new Set(value.map((item)=>item.name));
       return uniqueTypes.size === value.length;
+    }).test('testPolicyTypesMatchCzech','Policy types must match in both language sections',function(value){
+      return hasSamePolicyTypes(value, this.parent.service_policies_czech);
+    }),
+    service_policies_czech:yup.array().nullable().of(policySchema).test('testPolicyTypesUniqueCzech','Policy type must be unique',function(value){
+      if(!value){
+        return true;
+      }
+      const uniqueTypes = new Set(value.map((item)=>item.name));
+      return uniqueTypes.size === value.length;
+    }).test('testPolicyTypesMatchEnglish','Policy types must match in both language sections',function(value){
+      return hasSamePolicyTypes(value, this.parent.service_policies);
     }),
     requested_attributes: yup.array().nullable().of(yup.object().shape({
       name:yup.string().nullable().required(t('yup_required')).min(1,t('yup_required')).required(t('yup_required')).max(512,'Exceeded maximum characters (512)'),
@@ -1137,8 +1211,10 @@ const ServiceForm = (props)=> {
 
   const postApi= async (data)=>{
     data = generateValues(data);
+    data.service_policies = mergePolicyValuesForApi(data.service_policies, data.service_policies_czech);
+    delete data.service_policies_czech;
     // Ensure new fields are always present (even if empty) to pass backend validation
-    if (!data.hasOwnProperty('service_policies')) data.service_policies = [];
+    if (!Array.isArray(data.service_policies)) data.service_policies = [];
     if (!data.hasOwnProperty('infrastructures')) data.infrastructures = [];
     if (!data.hasOwnProperty('service_login_url')) data.service_login_url = '';
     if (!data.hasOwnProperty('service_login_url_czech')) data.service_login_url_czech = '';
@@ -1505,21 +1581,54 @@ const ServiceForm = (props)=> {
                   </InputRow>
                 : null}
 
-                    <InputRow moreInfo={tenant.form_config.more_info.service_policies} title={'Service Policies'} required={true} error={Array.isArray(errors.service_policies)?'Please provide valid policy URL and type':''} touched={touched.service_policies} description={'Add policy URL and select policy type.'}>
-                      <ServicePolicies
-                        values={values.service_policies}
-                        name='service_policies'
-                        empty={typeof(errors.service_policies)==='string'}
-                        error={errors.service_policies}
-                        touched={touched.service_policies}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        setFieldTouched={setFieldTouched}
-                        disabled={disabled}
-                        policyTypeOptions={policyTypeOptions}
-                        changed={props.changes?props.changes.service_policies:null}
-                      />
-                    </InputRow>
+                  <InputRow 
+                    moreInfo={tenant.form_config.more_info.service_policies} 
+                    title={'Service Policies'} 
+                    required={true} 
+                    error={Array.isArray(errors.service_policies) || Array.isArray(errors.service_policies_czech) ? 'Please provide valid policy URL and type for both languages' : ''} 
+                    touched={touched.service_policies || touched.service_policies_czech} 
+                    description={'Add policy URL and select policy type.'}
+                  >
+                    {/* English Input */}
+                    <div className="d-flex align-items-start mb-3">
+                      <span className="badge bg-secondary me-2 mt-2" style={{minWidth: '35px', marginRight: '12px'}}>EN</span>
+                      <div className="flex-grow-1">
+                        <ServicePolicies
+                          values={values.service_policies}
+                          name='service_policies'
+                          empty={typeof(errors.service_policies) === 'string'}
+                          error={errors.service_policies}
+                          touched={touched.service_policies}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          setFieldTouched={setFieldTouched}
+                          disabled={disabled}
+                          policyTypeOptions={policyTypeOptions}
+                          changed={props.changes ? props.changes.service_policies : null}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Czech Input */}
+                    <div className="d-flex align-items-start">
+                      <span className="badge bg-secondary me-2 mt-2" style={{minWidth: '35px', marginRight: '12px'}}>CS</span>
+                      <div className="flex-grow-1">
+                        <ServicePolicies
+                          values={values.service_policies_czech}
+                          name='service_policies_czech'
+                          empty={typeof(errors.service_policies_czech) === 'string'}
+                          error={errors.service_policies_czech}
+                          touched={touched.service_policies_czech}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          setFieldTouched={setFieldTouched}
+                          disabled={disabled}
+                          policyTypeOptions={policyTypeOptions}
+                          changed={props.changes ? props.changes.service_policies_czech : null}
+                        />
+                      </div>
+                    </div>
+                  </InputRow>
 
                       <InputRow hide={!tenant?.form_config?.more_info?.country?.enabled} moreInfo={tenant.form_config.more_info.country.description} title={'Jurisdiction of the Service'} required={tenant?.form_config?.more_info?.country?.required.includes(values.integration_environment) && tenant.form_config.more_info.country.enabled} extraClass='select-col' error={errors.country} touched={touched.country}>
                         <CountrySelect

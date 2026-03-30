@@ -7,6 +7,7 @@
   "service_login_url_czech":"",
   "infrastructures":[],
   "service_policies":[],
+  "service_policies_czech":[],
   "rp_accepted_tos":false,
   "rp_blocked_idps_desc": [],
   "rp_only_allowed_idps_desc": [],

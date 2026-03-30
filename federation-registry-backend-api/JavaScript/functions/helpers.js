@@ -98,23 +98,25 @@ const calcDiff = (oldState,newState,tenant) => {
     let new_policies = [];
     let old_policies = [];
     new_values.service_policies.forEach(item=>{
-      new_policies.push(item.name+'|||'+item.url);
+      const url_czech = item.url_czech || item.url;
+      new_policies.push(item.name+'|||'+item.url+'|||'+url_czech);
     });
     old_values.service_policies.forEach(item=>{
-      old_policies.push(item.name+'|||'+item.url);
+      const url_czech = item.url_czech || item.url;
+      old_policies.push(item.name+'|||'+item.url+'|||'+url_czech);
     });
     edits.add.service_policies = new_policies.filter(x=>!old_policies.includes(x));
     edits.dlt.service_policies = old_policies.filter(x=>!new_policies.includes(x));
     if(edits.add.service_policies.length>0){
       edits.add.service_policies.forEach((item,index)=>{
         items = item.split('|||');
-        edits.add.service_policies[index] = {name:items[0],url:items[1]};
+        edits.add.service_policies[index] = {name:items[0],url:items[1],url_czech:items[2] || items[1]};
       })
     }
     if(edits.dlt.service_policies.length>0){
       edits.dlt.service_policies.forEach((item,index)=>{
         items = item.split('|||');
-        edits.dlt.service_policies[index] = {name:items[0],url:items[1]};
+        edits.dlt.service_policies[index] = {name:items[0],url:items[1],url_czech:items[2] || items[1]};
       })
     }
     if(!old_values.infrastructures){
