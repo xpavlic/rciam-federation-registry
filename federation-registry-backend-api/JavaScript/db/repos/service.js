@@ -60,6 +60,12 @@ class ServiceRepository {
               queries.push(t.service_contacts.add('service',service.contacts,result.id));
               queries.push(t.service_state.add(result.id,'pending','create'));
               queries.push(t.service_multi_valued.addServiceBoolean('service',service,result.id));
+              if(service.service_policies&&service.service_policies.length>0){
+                queries.push(t.service_policies.add('service',service.service_policies,result.id));
+              }
+              if(service.infrastructures&&service.infrastructures.length>0){
+                queries.push(t.service_multi_valued.add('service','infrastructures',service.infrastructures,result.id));
+              }
               if(service.protocol==='oidc'){
                 if(service.grant_types&&service.grant_types.length>0){
                   queries.push(t.service_multi_valued.add('service','oidc_grant_types',service.grant_types,result.id));
@@ -73,11 +79,23 @@ class ServiceRepository {
                 if(service.post_logout_redirect_uris&&service.post_logout_redirect_uris.length>0){
                   queries.push(t.service_multi_valued.add('service','oidc_post_logout_redirect_uris',service.post_logout_redirect_uris,result.id));
                 }
+                if(service.resource_indicators&&service.resource_indicators.length>0){
+                  queries.push(t.service_multi_valued.add('service','oidc_resource_indicators',service.resource_indicators,result.id));
+                }
               }
               if(service.protocol==='saml'){
                 if(service.requested_attributes&&service.requested_attributes.length>0){
                   queries.push(t.service_multi_valued.addSamlAttributes('service',service.requested_attributes,result.id));                  
                 }
+                if(service.required_attributes&&service.required_attributes.length>0){
+                  queries.push(t.service_multi_valued.add('service','saml_required_attributes',service.required_attributes,result.id));
+                }
+              }
+              if(service.rp_blocked_idps_desc&&service.rp_blocked_idps_desc.length>0){
+                queries.push(t.service_multi_valued.add('service','rp_blocked_idps_desc',service.rp_blocked_idps_desc,result.id));
+              }
+              if(service.rp_only_allowed_idps_desc&&service.rp_only_allowed_idps_desc.length>0){
+                queries.push(t.service_multi_valued.add('service','rp_only_allowed_idps_desc',service.rp_only_allowed_idps_desc,result.id));
               }
               return t.batch(queries);
             }
@@ -121,6 +139,9 @@ class ServiceRepository {
                 queries.push(t.service_contacts.add('service',edits.add[key],targetId));
               }
               else if(key==='requested_attributes'){queries.push(t.service_multi_valued.addSamlAttributes('service',edits.add[key],targetId))}
+              else if(key==='service_policies'){
+                queries.push(t.service_policies.add('service',edits.add[key],targetId));
+              }
               else {
                 queries.push(t.service_multi_valued.add('service',key,edits.add[key],targetId));
               }
@@ -128,6 +149,7 @@ class ServiceRepository {
             for (var key in edits.dlt){
               if(key==='contacts'){queries.push(t.service_contacts.delete_one_or_many('service',edits.dlt[key],targetId));}
               else if(key==='requested_attributes'){queries.push(t.service_multi_valued.deleteSamlAttributes('service',edits.dlt[key],targetId))}
+              else if(key==='service_policies'){queries.push(t.service_policies.delete_one_or_many('service',edits.dlt[key],targetId));}
               else {queries.push(t.service_multi_valued.delete_one_or_many('service',key,edits.dlt[key],targetId));}
             }
             var result = await t.batch(queries);
@@ -158,10 +180,19 @@ class ServiceRepository {
       'token_endpoint_auth_method',sd.token_endpoint_auth_method,'token_endpoint_auth_signing_alg',sd.token_endpoint_auth_signing_alg,\
       'clear_access_tokens_on_refresh',sd.clear_access_tokens_on_refresh,'id_token_timeout_seconds',sd.id_token_timeout_seconds,\
       'metadata_url',sd.metadata_url,'entity_id',sd.entity_id,\
+      'assertion_consumer_service',sd.assertion_consumer_service,'single_logout_service',sd.single_logout_service,'signing_cert',sd.signing_cert,\
+      'check_group_membership',sd.check_group_membership,'require_vo_membership',sd.require_vo_membership,'rp_ensure_membership_desc',sd.rp_ensure_membership_desc,\
+      'require_group_membership',sd.require_group_membership,'rp_ensure_group_membership_desc',sd.rp_ensure_group_membership_desc,'create_group',sd.create_group,\
+      'allow_registration',sd.allow_registration,'dynamic_registration',sd.dynamic_registration,'registration_url',sd.registration_url,\
       'grant_types',(SELECT json_agg((v.value)) FROM service_oidc_grant_types v WHERE sd.id = v.owner_id),\
       'scope',(SELECT json_agg((v.value)) FROM service_oidc_scopes v WHERE sd.id = v.owner_id),\
       'requested_attributes',(SELECT coalesce(json_agg(json_build_object('friendly_name',v.friendly_name,'name',v.name,'required',v.required,'name_format',v.name_format)), '[]'::json) FROM service_saml_attributes v WHERE sd.id=v.owner_id),\
-      'redirect_uris',(SELECT json_agg((v.value)) FROM service_oidc_redirect_uris v WHERE sd.id = v.owner_id),'post_logout_redirect_uris',(SELECT json_agg((v.value)) FROM service_oidc_post_logout_redirect_uris v WHERE sd.id = v.owner_id),",
+      'required_attributes',(SELECT CASE WHEN array_agg((v.value)) IS NULL THEN Array[]::varchar[] ELSE array_agg((v.value)) END FROM service_saml_required_attributes v WHERE sd.id = v.owner_id),\
+      'redirect_uris',(SELECT json_agg((v.value)) FROM service_oidc_redirect_uris v WHERE sd.id = v.owner_id),\
+      'post_logout_redirect_uris',(SELECT json_agg((v.value)) FROM service_oidc_post_logout_redirect_uris v WHERE sd.id = v.owner_id),\
+      'resource_indicators',(SELECT json_agg((v.value)) FROM service_oidc_resource_indicators v WHERE sd.id = v.owner_id),\
+      'rp_blocked_idps_desc',(SELECT json_agg((v.value)) FROM service_rp_blocked_idps_desc v WHERE sd.id = v.owner_id),\
+      'rp_only_allowed_idps_desc',(SELECT json_agg((v.value)) FROM service_rp_only_allowed_idps_desc v WHERE sd.id = v.owner_id),",
       tags_filter:"",
       exclude_tags_filter:""
     }

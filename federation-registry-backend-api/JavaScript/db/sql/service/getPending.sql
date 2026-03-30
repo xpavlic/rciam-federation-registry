@@ -7,8 +7,11 @@ SELECT json_build_object('id',sd.id,'service_name', sd.service_name,'service_des
 						 'refresh_token_validity_seconds',sd.refresh_token_validity_seconds,'refresh_token_validity_seconds',sd.refresh_token_validity_seconds,
 						 'client_secret',sd.client_secret,'reuse_refresh_token',sd.reuse_refresh_token,'protocol',sd.protocol,'jwks',sd.jwks,'jwks_uri',sd.jwks_uri,
 						 'country',sd.country,'website_url',sd.website_url,'token_endpoint_auth_method',sd.token_endpoint_auth_method,'token_endpoint_auth_signing_alg',sd.token_endpoint_auth_signing_alg,
-						 'clear_access_tokens_on_refresh',sd.clear_access_tokens_on_refresh,'id_token_timeout_seconds',sd.id_token_timeout_seconds,'metadata_url',sd.metadata_url
-						 ,'entity_id',sd.entity_id,'tenant',sd.tenant,'external_id',sd.external_id,'aup_uri',sd.aup_uri,'organization_name',sd.name,'organization_url',sd.url,'organization_id',sd.organization_id,
+						 'clear_access_tokens_on_refresh',sd.clear_access_tokens_on_refresh,'id_token_timeout_seconds',sd.id_token_timeout_seconds,'metadata_url',sd.metadata_url,
+						 'entity_id',sd.entity_id,'assertion_consumer_service',sd.assertion_consumer_service,'single_logout_service',sd.single_logout_service,'signing_cert',sd.signing_cert,
+						 'check_group_membership',sd.check_group_membership,'require_vo_membership',sd.require_vo_membership,'rp_ensure_membership_desc',sd.rp_ensure_membership_desc,
+						 'require_group_membership',sd.require_group_membership,'rp_ensure_group_membership_desc',sd.rp_ensure_group_membership_desc,'create_group',sd.create_group,'allow_registration',sd.allow_registration,'dynamic_registration',sd.dynamic_registration,'registration_url',sd.registration_url,
+						 'tenant',sd.tenant,'external_id',sd.external_id,'aup_uri',sd.aup_uri,'organization_name',sd.name,'organization_url',sd.url,'organization_id',sd.organization_id,
 						 'application_type',sd.application_type,'deployment_type',sd.deployment_type,'created_at',sd.created_at, 'requester', sd.requester, 'proxy_deploy_success', sd.proxy_deploy_success, 'grant_types',
 							(SELECT json_agg((v.value))
 							 FROM service_oidc_grant_types v WHERE sd.id = v.owner_id),
@@ -21,12 +24,24 @@ SELECT json_build_object('id',sd.id,'service_name', sd.service_name,'service_des
 						 'post_logout_redirect_uris',
 						 	(SELECT json_agg((v.value))
 							 FROM service_oidc_post_logout_redirect_uris v WHERE sd.id = v.owner_id),
+						 'resource_indicators',
+						 	(SELECT json_agg((v.value))
+							 FROM service_oidc_resource_indicators v WHERE sd.id = v.owner_id),
+						 'rp_blocked_idps_desc',
+						 	(SELECT json_agg((v.value))
+							 FROM service_rp_blocked_idps_desc v WHERE sd.id = v.owner_id),
+						 'rp_only_allowed_idps_desc',
+						 	(SELECT json_agg((v.value))
+							 FROM service_rp_only_allowed_idps_desc v WHERE sd.id = v.owner_id),
 						 'contacts',
 						 	(SELECT json_agg(json_build_object('email',v.value,'type',v.type))
 							 FROM service_contacts v WHERE sd.id = v.owner_id),
 						 'requested_attributes',
 						 	(SELECT coalesce(json_agg(json_build_object('friendly_name',v.friendly_name,'name',v.name,'required',v.required,'name_format',v.name_format)), '[]'::json) 
-							 FROM service_saml_attributes v WHERE sd.id=v.owner_id)
+							 FROM service_saml_attributes v WHERE sd.id=v.owner_id),
+						 'required_attributes',
+						 	(SELECT json_agg((v.value))
+							 FROM service_saml_required_attributes v WHERE sd.id = v.owner_id)
 							) json
     FROM (SELECT *
 	FROM ((SELECT id,deployment_type,created_at FROM service_state WHERE state='pending') AS bar LEFT JOIN service_details USING (id)) AS foo

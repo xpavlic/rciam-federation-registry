@@ -6,6 +6,7 @@ var config = require('./config');
 var defaultAttributes = require('./tenant_config/requested_attributes.json');
 const {db} = require('./db');
 const e = require('express');
+const forge = require('node-forge');
 let countryCodes =[];
 var stringConstructor = "test".constructor;
 const fs = require('fs');
@@ -206,6 +207,41 @@ const isEmpty = (value) => {
   return !isNotEmpty(value);
 }
 
+const validateSigningCertificate = (value) => {
+  if(isEmpty(value)){
+    return true;
+  }
+
+  let certificate;
+  try{
+    certificate = forge.pki.certificateFromPem(value);
+  }
+  catch(err){
+    throw new Error('Signing certificate must be a valid PEM X.509 certificate');
+  }
+
+  const now = new Date();
+  if(!certificate.validity || !certificate.validity.notAfter || certificate.validity.notAfter <= now){
+    throw new Error('Signing certificate is expired');
+  }
+
+  let modulusBitLength;
+  try{
+    if(certificate.publicKey && certificate.publicKey.n && typeof(certificate.publicKey.n.bitLength) === 'function'){
+      modulusBitLength = certificate.publicKey.n.bitLength();
+    }
+  }
+  catch(err){
+    throw new Error('Could not extract signing certificate key size');
+  }
+
+  if(!modulusBitLength || modulusBitLength < 2048){
+    throw new Error('Signing certificate key size must be at least 2048 bits');
+  }
+
+  return true;
+}
+
 const serviceValidationRules = (options,req) => {
 
   const append_error = (value,req,pos,field,error) => {
@@ -307,7 +343,8 @@ const serviceValidationRules = (options,req) => {
     return [
       body().isArray({min:1}).withMessage('Body must be an array containing at least one service'),
       body('*.tenant').custom((value,{req,location,path})=>{if(options.tenant_param||req.body[path.match(/\[(.*?)\]/)[1]].tenant in tenant_config){return true}else{return false}}).withMessage('Invalid Tenant'),
-      body('*.service_name').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_name')}).withMessage('Service name missing').if((value,{req,location,path})=> { return value}).isString().withMessage('Service name must be a string').isLength({min:2, max:256}).withMessage('Service name must be from 2 up to 256 characters'),
+      body('*.service_name').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_name')}).withMessage('Service name missing').if((value,{req,location,path})=> { return value}).isString().withMessage('Service name must be a string').isLength({min:2, max:255}).withMessage('Service name must be from 2 up to 255 characters'),
+      body('*.service_name_czech').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_name_czech')}).withMessage('Service name (Czech) missing').if((value)=> {return value}).isString().withMessage('Service name (Czech) must be a string').isLength({min:2, max:255}).withMessage('Service name (Czech) must be from 2 up to 255 characters'),
       body('*.country').custom((value,{req,location,path})=>{
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let integration_environment = req.body[path.match(/\[(.*?)\]/)[1]].integration_environment;
@@ -329,7 +366,8 @@ const serviceValidationRules = (options,req) => {
           return false
         }
       }).withMessage('Invalid Country Code'),
-      body('*.service_description').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_description')}).withMessage('Service Description missing').if((value)=> {return value}).isString().withMessage('Service Description must be a string').isLength({min:1}).withMessage("Service description can't be empty"),
+      body('*.service_description').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_description')}).withMessage('Service Description missing').if((value)=> {return value}).isString().withMessage('Service Description must be a string').isLength({min:1, max:255}).withMessage("Service description must be between 1 and 255 characters"),
+      body('*.service_description_czech').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_description_czech')}).withMessage('Service Description (Czech) missing').if((value)=> {return value}).isString().withMessage('Service Description (Czech) must be a string').isLength({min:1, max:255}).withMessage("Service description (Czech) must be between 1 and 255 characters"),
       body('*.logo_uri').optional({checkFalsy:true}).isString().withMessage('Service Logo must be a string').custom((value)=> value.match(reg.regUrl)).withMessage('Service Logo must be a secure url https://').isLength({max:256}).withMessage("Service logo cant exceed character limit (6000)"),
       body('*.policy_uri').custom((value,{req,location,path})=>{
         let pos = path.match(/\[(.*?)\]/)[1];
@@ -587,6 +625,51 @@ const serviceValidationRules = (options,req) => {
           throw new Error(err);
         }
       }),
+      body('*.resource_indicators').optional({checkFalsy:true}).if((value,{req,location,path})=> {
+        let pos = path.match(/\[(.*?)\]/)[1];
+        return req.body[pos].protocol==='oidc';
+      }).custom((value)=>{
+        if(!Array.isArray(value)){
+          throw new Error('Service resource_indicators must be an array');
+        }
+        value.forEach((item)=>{
+          if(!item || !item.match(reg.regSimpleUrl)){
+            throw new Error('Resource indicator must be a valid url');
+          }
+        });
+        return true;
+      }),
+      body('*.rp_blocked_idps_desc').optional({checkFalsy:true}).custom((value)=>{
+        if(!Array.isArray(value)){
+          throw new Error('Service rp_blocked_idps_desc must be an array');
+        }
+        value.forEach((item)=>{
+          if(typeof item !== 'string' || item.length < 1 || item.length > 512){
+            throw new Error('Blocked IdP value must be a non-empty string with max length 512');
+          }
+        });
+        return true;
+      }),
+      body('*.rp_only_allowed_idps_desc').optional({checkFalsy:true}).custom((value)=>{
+        if(!Array.isArray(value)){
+          throw new Error('Service rp_only_allowed_idps_desc must be an array');
+        }
+        value.forEach((item)=>{
+          if(typeof item !== 'string' || item.length < 1 || item.length > 512){
+            throw new Error('Allowed IdP value must be a non-empty string with max length 512');
+          }
+        });
+        return true;
+      }),
+      body('*.check_group_membership').optional({checkFalsy:false}).custom((value)=> typeof(value)==='boolean').withMessage('check_group_membership must be a boolean'),
+      body('*.require_vo_membership').optional({checkFalsy:false}).custom((value)=> typeof(value)==='boolean').withMessage('require_vo_membership must be a boolean'),
+      body('*.rp_ensure_membership_desc').optional({checkFalsy:true}).isString().isLength({min:2,max:255}),
+      body('*.require_group_membership').optional({checkFalsy:false}).custom((value)=> typeof(value)==='boolean').withMessage('require_group_membership must be a boolean'),
+      body('*.rp_ensure_group_membership_desc').optional({checkFalsy:true}).isString().isLength({min:2,max:255}),
+      body('*.create_group').optional({checkFalsy:false}).custom((value)=> typeof(value)==='boolean').withMessage('create_group must be a boolean'),
+      body('*.allow_registration').optional({checkFalsy:false}).custom((value)=> typeof(value)==='boolean').withMessage('allow_registration must be a boolean'),
+      body('*.dynamic_registration').optional({checkFalsy:false}).custom((value)=> typeof(value)==='boolean').withMessage('dynamic_registration must be a boolean'),
+      body('*.registration_url').optional({checkFalsy:true}).isString().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('registration_url must be a valid url'),
       body('*.scope').custom((value,{req,location,path})=>{ return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1],'scope')}).withMessage('Service redirect_uri missing').if((value,{req,location,path})=> {return value&&value.length>0&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).isArray({min:1}).withMessage('Must be an array').custom((value,success=true)=> {
         try{
           value.map((item,index)=>{if(!item.match(reg.regScope)){
@@ -847,6 +930,17 @@ const serviceValidationRules = (options,req) => {
           }
         });
       }),
+      body('*.assertion_consumer_service').if((value,{req,location,path})=>{return req.body[path.match(/\[(.*?)\]/)[1]].protocol==='saml'}).optional({checkFalsy:true}).isString().withMessage('Assertion consumer service must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Assertion consumer service must be a valid url'),
+      body('*.single_logout_service').if((value,{req,location,path})=>{return req.body[path.match(/\[(.*?)\]/)[1]].protocol==='saml'}).optional({checkFalsy:true}).isString().withMessage('Single logout service must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Single logout service must be a valid url'),
+      body('*.signing_cert').if((value,{req,location,path})=>{return req.body[path.match(/\[(.*?)\]/)[1]].protocol==='saml'}).optional({checkFalsy:true}).isString().withMessage('Signing certificate must be a string').custom((value)=>validateSigningCertificate(value)),
+      body('*.required_attributes').if((value,{req,location,path})=>{return req.body[path.match(/\[(.*?)\]/)[1]].protocol==='saml'}).optional({checkFalsy:true}).isArray({min:1}).withMessage('required_attributes must be a non-empty array').custom((value)=>{
+        value.forEach((item)=>{
+          if(typeof item !== 'string' || item.length === 0){
+            throw new Error('required_attributes values must be non-empty strings');
+          }
+        });
+        return true;
+      }),
       body('*.external_id').customSanitizer((value)=>{
         if(options.sanitize&&typeof value == 'number'){
           return value.toString();
@@ -855,6 +949,43 @@ const serviceValidationRules = (options,req) => {
         }
       }).optional({checkFalsy:true}).isString().withMessage('Must be a string').isLength({min:1, max:36}),
       body('*.website_url').optional({checkFalsy:true}).isString().withMessage('Website Url must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Website Url must be a valid url'),
+      body('*.service_login_url').optional({checkFalsy:true}).isString().withMessage('Service login url must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Service login url must be a valid url'),
+      body('*.service_login_url_czech').optional({checkFalsy:true}).isString().withMessage('Service login url (Czech) must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Service login url (Czech) must be a valid url'),
+      body('*.infrastructures').optional({checkFalsy:true}).custom((value,{req,location,path})=>{
+        let pos = path.match(/\[(.*?)\]/)[1];
+        let tenant = options.tenant_param?req.params.tenant:req.body[pos].tenant;
+        let optionsList = tenant_config[tenant]?.form?.extra_fields?.infrastructures?.options || [];
+        if(!value){
+          return true;
+        }
+        if(!Array.isArray(value)){
+          throw new Error('infrastructures must be an array');
+        }
+        if(optionsList.length===0){
+          return true;
+        }
+        value.forEach(item=>{
+          if(!optionsList.includes(item)){
+            throw new Error('infrastructures value is not supported for this tenant');
+          }
+        });
+        return true;
+      }),
+      body('*.service_policies').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_policies')}).withMessage('Service policies missing').if((value)=> {return value}).isArray({min:1}).withMessage('Service policies must be a non-empty array').custom((value)=>{
+        let success = true;
+        value.forEach(item=>{
+          if(!item||typeof(item.name)!=='string'||typeof(item.url)!=='string'){
+            success = false;
+          }
+          if(!item.name||!item.url||!item.url.match(reg.regSimpleUrl)){
+            success = false;
+          }
+        });
+        if(!success){
+          throw new Error('Invalid service policy values');
+        }
+        return true;
+      }),
       body('*.aup_uri').custom((value,{req,location,path})=>{
         let pos = path.match(/\[(.*?)\]/)[1];
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
@@ -952,7 +1083,7 @@ const serviceValidationRules = (options,req) => {
 const petitionValidationRules = () => {
   let tenant;
   return [
-    body('service_id').if(body('type').custom((value)=>{return (value==='edit'||values==='delete')})).exists().withMessage('Required Field').bail().custom((value)=>{if(parseInt(value)){return true}else{return false}}).bail(),
+    body('service_id').if(body('type').custom((value)=>{return (value==='edit'||value==='delete')})).exists().withMessage('Required Field').bail().custom((value)=>{if(parseInt(value)){return true}else{return false}}).bail(),
     body('type').exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value)=>{if(['edit','create','delete'].includes(value)){return true}else{return false}}).bail()
   ]
 }

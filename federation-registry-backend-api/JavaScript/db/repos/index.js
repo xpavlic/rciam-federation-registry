@@ -22,5 +22,6 @@ module.exports = {
     ServiceErrors: require('./service_errors'),
     Organizations: require('./organizations'),
     BannerAlerts: require('./banner_alerts'),
-    ServiceTags: require('./service_tags')
+    ServiceTags: require('./service_tags'),
+    ServicePolicies: require('./service_policies')
 };

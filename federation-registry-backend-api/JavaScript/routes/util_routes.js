@@ -31,7 +31,8 @@ router.get('/metadata_info',async (req,res,next)=>{
         try{
           if(result){
             let ns = extractNamespace(result);
-            let entity_id, requested_attributes; 
+            let entity_id, requested_attributes;
+            let assertion_consumer_service, single_logout_service, signing_cert;
             let supported_attributes=[];
             let unsupported_attributes= [];
             if(!(result.hasOwnProperty(ns+'EntityDescriptor')&&result[ns+'EntityDescriptor'].hasOwnProperty(ns+'SPSSODescriptor'))){
@@ -44,6 +45,24 @@ router.get('/metadata_info',async (req,res,next)=>{
             catch(err){
               console.log(err);
             };
+            try{
+              const spDescriptor = result[ns+'EntityDescriptor'][ns+'SPSSODescriptor'];
+              const assertionConsumerServices = toArray(spDescriptor[ns+'AssertionConsumerService']);
+              const logoutServices = toArray(spDescriptor[ns+'SingleLogoutService']);
+              const keyDescriptors = toArray(spDescriptor[ns+'KeyDescriptor']);
+
+              const assertionConsumer = assertionConsumerServices.find((item)=>item && item._attributes && item._attributes.Location) || assertionConsumerServices[0];
+              assertion_consumer_service = assertionConsumer && assertionConsumer._attributes ? assertionConsumer._attributes.Location : null;
+
+              const logoutService = logoutServices.find((item)=>item && item._attributes && item._attributes.Location) || logoutServices[0];
+              single_logout_service = logoutService && logoutService._attributes ? logoutService._attributes.Location : null;
+
+              const signingKeyDescriptor = keyDescriptors.find((item)=>item && item._attributes && item._attributes.use === 'signing') || keyDescriptors[0];
+              signing_cert = signingKeyDescriptor && signingKeyDescriptor[ns+'KeyInfo'] && signingKeyDescriptor[ns+'KeyInfo'][ns+'X509Data'] && signingKeyDescriptor[ns+'KeyInfo'][ns+'X509Data'][ns+'X509Certificate']
+                ? normalizeCertificate(signingKeyDescriptor[ns+'KeyInfo'][ns+'X509Data'][ns+'X509Certificate']._text)
+                : null;
+            }
+            catch(err){}
             try{
               requested_attributes = result[ns+'EntityDescriptor'][ns+'SPSSODescriptor'][ns+'AttributeConsumingService'][ns+'RequestedAttribute'];                 
               if(requested_attributes&&requested_attributes.length>0){
@@ -60,7 +79,15 @@ router.get('/metadata_info',async (req,res,next)=>{
               }
             }
             catch(err){}
-            res.status(200).send({entity_id, supported_attributes:supported_attributes, unsupported_attributes:unsupported_attributes,metadata_url:url});
+            res.status(200).send({
+              entity_id,
+              assertion_consumer_service,
+              single_logout_service,
+              signing_cert,
+              supported_attributes:supported_attributes,
+              unsupported_attributes:unsupported_attributes,
+              metadata_url:url
+            });
           }  
         }
         catch(err){
@@ -100,6 +127,24 @@ function extractNamespace(xml) {
     return "";
   }
 };
+
+function toArray(value){
+  if(!value){
+    return [];
+  }
+  return Array.isArray(value) ? value : [value];
+}
+
+function normalizeCertificate(value){
+  if(!value){
+    return null;
+  }
+  const cert = value.replace(/\s+/g, '');
+  if(!cert){
+    return null;
+  }
+  return '-----BEGIN CERTIFICATE-----\n' + cert.match(/.{1,64}/g).join('\n') + '\n-----END CERTIFICATE-----';
+}
   
 
 

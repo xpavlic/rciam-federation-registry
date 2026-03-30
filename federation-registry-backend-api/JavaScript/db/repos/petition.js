@@ -102,15 +102,29 @@ class PetitionRepository {
                 queries.push(t.service_details_protocol.add('petition',petition,result.id));
                 queries.push(t.service_contacts.add('petition',petition.contacts,result.id));
                 queries.push(t.service_multi_valued.addServiceBoolean('petition',petition,result.id));
+                if(petition.service_policies&&petition.service_policies.length>0){
+                  queries.push(t.service_policies.add('petition',petition.service_policies,result.id));
+                }
+                if(petition.infrastructures&&petition.infrastructures.length>0){
+                  queries.push(t.service_multi_valued.add('petition','infrastructures',petition.infrastructures,result.id));
+                }
                 if(petition.protocol==='oidc'){
                   queries.push(t.service_multi_valued.add('petition','oidc_grant_types',petition.grant_types,result.id));
                   queries.push(t.service_multi_valued.add('petition','oidc_scopes',petition.scope,result.id));
                   queries.push(t.service_multi_valued.add('petition','oidc_redirect_uris',petition.redirect_uris,result.id));
                   queries.push(t.service_multi_valued.add('petition','oidc_post_logout_redirect_uris',petition.post_logout_redirect_uris,result.id));
+                  queries.push(t.service_multi_valued.add('petition','oidc_resource_indicators',petition.resource_indicators,result.id));
 
                 }
                 if(petition.protocol==='saml'){
                   queries.push(t.service_multi_valued.addSamlAttributes('petition',petition.requested_attributes,result.id));                  
+                  queries.push(t.service_multi_valued.add('petition','saml_required_attributes',petition.required_attributes,result.id));
+                }
+                if(petition.rp_blocked_idps_desc&&petition.rp_blocked_idps_desc.length>0){
+                  queries.push(t.service_multi_valued.add('petition','rp_blocked_idps_desc',petition.rp_blocked_idps_desc,result.id));
+                }
+                if(petition.rp_only_allowed_idps_desc&&petition.rp_only_allowed_idps_desc.length>0){
+                  queries.push(t.service_multi_valued.add('petition','rp_only_allowed_idps_desc',petition.rp_only_allowed_idps_desc,result.id));
                 }
                 var result2 = await t.batch(queries);
                 if(result2){
@@ -141,6 +155,9 @@ class PetitionRepository {
               else if(key === 'service_boolean'){
                 queries.push(t.service_multi_valued.addServiceBoolean('petition',{...edits.add[key],tenant:tenant},targetId));
               }
+              else if(key==='service_policies'){
+                queries.push(t.service_policies.add('petition',edits.add[key],targetId));
+              }
               else {
                 queries.push(t.service_multi_valued.add('petition',key,edits.add[key],targetId));
               } 
@@ -154,6 +171,7 @@ class PetitionRepository {
             for (var key in edits.dlt){
               if(key==='contacts'){queries.push(t.service_contacts.delete_one_or_many('petition',edits.dlt[key],targetId));}
               else if(key==='requested_attributes'){queries.push(t.service_multi_valued.deleteSamlAttributes('petition',edits.dlt[key],targetId))}
+              else if(key==='service_policies'){queries.push(t.service_policies.delete_one_or_many('petition',edits.dlt[key],targetId));}
               else {queries.push(t.service_multi_valued.delete_one_or_many('petition',key,edits.dlt[key],targetId));}
             }
             var result = await t.batch(queries);

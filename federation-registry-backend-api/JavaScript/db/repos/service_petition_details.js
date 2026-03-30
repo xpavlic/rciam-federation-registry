@@ -20,7 +20,9 @@ class ServicePetitionDetailsRepository {
     async add(body,sub){
       return this.db.one(sql.add,{
         service_description: body.service_description,
+        service_description_czech: body.service_description_czech,
         service_name: body.service_name,
+        service_name_czech: body.service_name_czech,
         logo_uri: body.logo_uri,
         policy_uri: body.policy_uri,
         integration_environment: body.integration_environment,
@@ -31,6 +33,17 @@ class ServicePetitionDetailsRepository {
         organization_id: body.organization_id,
         aup_uri:body.aup_uri,
         website_url:body.website_url,
+        check_group_membership:body.check_group_membership,
+        require_vo_membership:body.require_vo_membership,
+        rp_ensure_membership_desc:body.rp_ensure_membership_desc,
+        require_group_membership:body.require_group_membership,
+        rp_ensure_group_membership_desc:body.rp_ensure_group_membership_desc,
+        create_group:body.create_group,
+        allow_registration:body.allow_registration,
+        dynamic_registration:body.dynamic_registration,
+        registration_url:body.registration_url,
+        service_login_url:body.service_login_url,
+        service_login_url_czech:body.service_login_url_czech,
         tenant:body.tenant,
         type:body.type,
         status:(body.status?body.status:"pending"),
@@ -42,7 +55,9 @@ class ServicePetitionDetailsRepository {
     async update(body,id){
         return this.db.none(sql.update,{
           service_description: body.service_description,
+          service_description_czech: body.service_description_czech,
           service_name: body.service_name,
+          service_name_czech: body.service_name_czech,
           logo_uri: body.logo_uri,
           country: body.country,
           policy_uri: body.policy_uri,
@@ -51,6 +66,17 @@ class ServicePetitionDetailsRepository {
           type:body.type,
           protocol:body.protocol,
           website_url:body.website_url,
+          check_group_membership:body.check_group_membership,
+          require_vo_membership:body.require_vo_membership,
+          rp_ensure_membership_desc:body.rp_ensure_membership_desc,
+          require_group_membership:body.require_group_membership,
+          rp_ensure_group_membership_desc:body.rp_ensure_group_membership_desc,
+          create_group:body.create_group,
+          allow_registration:body.allow_registration,
+          dynamic_registration:body.dynamic_registration,
+          registration_url:body.registration_url,
+          service_login_url:body.service_login_url,
+          service_login_url_czech:body.service_login_url_czech,
           status:"pending",
           aup_uri:body.aup_uri,
           organization_id:body.organization_id
@@ -196,8 +222,8 @@ function createColumnsets(pgp) {
         // otherwise you can just pass in a string for the table name.
         const table = new pgp.helpers.TableName({table: 'service_petition_details', schema: 'public'});
 
-        cs.insert = new pgp.helpers.ColumnSet(['service_description','service_name','country',
-          'logo_uri','policy_uri','integration_environment','requester','protocol','comment','website_url'],
+        cs.insert = new pgp.helpers.ColumnSet(['service_description','service_description_czech','service_name','service_name_czech','country',
+          'service_login_url','service_login_url_czech','logo_uri','policy_uri','integration_environment','requester','protocol','comment','website_url'],
           {table});
         cs.update = cs.insert.extend(['?id','state','type','reviewed_at','reviewer','service_id']);
     }
