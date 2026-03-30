@@ -1551,39 +1551,22 @@ const ServiceForm = (props)=> {
                               changed={props.changes?props.changes.organization_name:null}
                             />
                           </InputRow>
-                          <InputRow  moreInfo={tenant.form_config.more_info.organization_url} title="Organisation Website URL" required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} description="Link to the organization's website" error={errors.organization_url} touched={touched.organization_url}>
-                            <SimpleInput
-                              name='organization_url'
-                              placeholder={t('form_url_placeholder')}
-                              onChange={handleChange}
-                              value={values.organization_url}
-                              isInvalid={hasSubmitted?!!errors.organization_url:(!!errors.organization_url&&touched.organization_url)}
-                              onBlur={handleBlur}
-                              disabled={disabled||disabledOrganizationFields.includes('organization_url')}
-                              changed={props.changes?props.changes.organization_url:null}
-                            />
-                          </InputRow>
-                          
                         </React.Fragment>
                         :null
                       }
-                      <InputRow  moreInfo={tenant.form_config.more_info.policy_uri} title={t('form_policy_uri')} required={tenant.form_config.more_info.policy_uri?.required?.includes(values.integration_environment)} description={t('form_policy_uri_desc')} error={errors.policy_uri} touched={touched.policy_uri}>
+                    <InputRow  moreInfo={tenant.form_config.more_info.organization_url} title="Organisation Website URL" required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} description="Link to the organization's website" error={errors.organization_url} touched={touched.organization_url}>
                         <SimpleInput
-                          name='policy_uri'
-                          placeholder={t('form_url_placeholder')}
-                          onChange={handleChange}
-                          value={values.policy_uri}
-                          isInvalid={hasSubmitted?!!errors.policy_uri:(!!errors.policy_uri&&touched.policy_uri)}
-                          onBlur={handleBlur}
-                          disabled={disabled}
-                          changed={props.changes?props.changes.policy_uri:null}
+                            name='organization_url'
+                            placeholder={t('form_url_placeholder')}
+                            onChange={handleChange}
+                            value={values.organization_url}
+                            isInvalid={hasSubmitted?!!errors.organization_url:(!!errors.organization_url&&touched.organization_url)}
+                            onBlur={handleBlur}
+                            disabled={disabled||disabledOrganizationFields.includes('organization_url')}
+                            changed={props.changes?props.changes.organization_url:null}
                         />
-                        <UrlWarning url={values.policy_uri} touched={hasSubmitted||touched.policy_uri}/>
-                      </InputRow>
-
-
+                    </InputRow>
                       
-
                       {Object.entries(tenant.form_config.extra_fields).map(([name,field_data])=>{
                         field_data.name = name;                    
                         return (field_data.tab==='general'&&field_data.tag!=='once'?<React.Fragment key={name}>
@@ -1603,9 +1586,6 @@ const ServiceForm = (props)=> {
                       </React.Fragment>:null)                    
                       })
                     }
-                
-
-
 
                       <InputRow  moreInfo={tenant.form_config.more_info.contacts} title={t('form_contacts')} required={true} error={typeof(errors.contacts)==='string'?errors.contacts:null} touched={touched.contacts} description={t('form_contacts_desc')}>
                         <Contacts

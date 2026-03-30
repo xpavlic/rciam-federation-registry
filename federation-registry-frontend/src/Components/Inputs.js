@@ -1469,12 +1469,12 @@ export function Contacts(props){
 
 
 export function ServicePolicies(props){
-
-  const hasPolicyTypeOptions = Array.isArray(props.policyTypeOptions) && props.policyTypeOptions.length > 0;
+const hasPolicyTypeOptions = Array.isArray(props.policyTypeOptions) && props.policyTypeOptions.length > 0;
   const [newName,setNewName] = useState(hasPolicyTypeOptions ? props.policyTypeOptions[0].value : '');
   const [newUrl,setNewUrl] = useState('');
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
+  
   return (
         <FieldArray name={props.name}>
           {({push,remove})=> (
@@ -1498,6 +1498,7 @@ export function ServicePolicies(props){
                       value={newName}
                       onChange={(e)=>{setNewName(e.target.value)}}
                       className='input-hide'
+                      style={{ flex: '0 0 auto', width: 'auto' }}
                       onBlur={()=>{!props.touched&&props.setFieldTouched(props.name,true)}}
                       disabled={props.disabled}
                     >
@@ -1511,6 +1512,7 @@ export function ServicePolicies(props){
                       onChange={(e)=>{setNewName(e.target.value)}}
                       column="true"
                       sm="4"
+                      style={{ flex: '0 0 auto', width: 'auto' }}
                       onBlur={()=>{!props.touched&&props.setFieldTouched(props.name,true)}}
                       type="text"
                       className='col-form-label.sm'
@@ -1564,6 +1566,7 @@ export function ServicePolicies(props){
                           onChange={props.onChange}
                           isInvalid={Array.isArray(props.error)&&props.error[index]?true:false}
                           className='input-hide'
+                          style={{ flex: '0 0 auto', width: 'auto' }}
                           disabled={props.disabled}
                         >
                           {props.policyTypeOptions.map((policyType,policyTypeIndex)=>(
@@ -1578,6 +1581,7 @@ export function ServicePolicies(props){
                           isInvalid={Array.isArray(props.error)&&props.error[index]?true:false}
                           column="true"
                           sm="4"
+                          style={{ flex: '0 0 auto', width: 'auto' }}
                           type="text"
                           className='col-form-label.sm'
                           placeholder='Policy name'
