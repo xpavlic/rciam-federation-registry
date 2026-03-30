@@ -1755,7 +1755,7 @@ const ServiceForm = (props)=> {
                           onChange={handleChange}
                           onBlur={handleBlur}
                           checked={values.rp_accepted_tos}
-                          disabled={disabled || values.integration_environment !== 'production'}
+                          disabled={disabled}
                           changed={props.changes ? props.changes.rp_accepted_tos : null}
                         /> 
                       </InputRow>
