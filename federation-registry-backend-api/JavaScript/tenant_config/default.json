@@ -40,12 +40,8 @@
       "disabled_fields": [],
       "contact_requirements":[
         {
-          "type":"support technical",
-          "error":"The Service must have Technical and/or Support contact information"
-        },
-        {
-          "type":"security",
-          "error":"The Service must have Security contact information"
+          "type":"admin",
+          "error":"The Service must have Administrative contact information"
         }
       ],
       "contact_types":["admin","technical","support","security"],
@@ -60,7 +56,10 @@
           "description": "Website URL for information about the service (This information will be shown in the Consent Page)"
         },
         "service_description": {
-          "description" : "Human-readable text description, plain text format (max 1000 characters) (This information will be shown in the Consent Page)"
+          "description" : "Human-readable text description, plain text format (max 255 characters) (This information will be shown in the Consent Page)"
+        },
+        "service_description_czech": {
+          "description" : "Human-readable text description in Czech, plain text format (max 255 characters)."
         },
         "client_id":{
           "tooltip": "A unique string representing the registration information provided by the OAuth 2.0 client at the authorisation server."
@@ -76,6 +75,18 @@
         },
         "service_name": {
           "description": "Human-readable application name. (This information will be shown in the Consent Page)"
+        },
+        "service_name_czech": {
+          "description": "Human-readable application name in Czech."
+        },
+        "service_login_url": {
+          "description": "Homepage or login page of your service where the AAI login button is visible for users to start authentication."
+        },
+        "service_login_url_czech": {
+          "description": "Homepage or login page of your service where the AAI login button is visible for users to start authentication."
+        },
+        "service_policies": {
+          "description": "List of service policies (name and URL)."
         },
         "logo_uri": {
           "description": "URL that points to a logo image. (Logo will be displayed in the Consent Page)"
@@ -104,7 +115,7 @@
           "title": "Organization",
           "tag": "org",
           "active": ["production"],
-          "required": ["production"]
+          "required": []
         },
         "dpcoco":{
           "title": "Data Protection Code of Conduct",

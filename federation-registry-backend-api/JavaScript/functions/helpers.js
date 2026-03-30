@@ -89,6 +89,42 @@ const calcDiff = (oldState,newState,tenant) => {
           edits.dlt.contacts[index] = {email:items[0],type:items[1]};
       })
     }
+    if(!old_values.service_policies){
+      old_values.service_policies = [];
+    }
+    if(!new_values.service_policies){
+      new_values.service_policies = [];
+    }
+    let new_policies = [];
+    let old_policies = [];
+    new_values.service_policies.forEach(item=>{
+      new_policies.push(item.name+'|||'+item.url);
+    });
+    old_values.service_policies.forEach(item=>{
+      old_policies.push(item.name+'|||'+item.url);
+    });
+    edits.add.service_policies = new_policies.filter(x=>!old_policies.includes(x));
+    edits.dlt.service_policies = old_policies.filter(x=>!new_policies.includes(x));
+    if(edits.add.service_policies.length>0){
+      edits.add.service_policies.forEach((item,index)=>{
+        items = item.split('|||');
+        edits.add.service_policies[index] = {name:items[0],url:items[1]};
+      })
+    }
+    if(edits.dlt.service_policies.length>0){
+      edits.dlt.service_policies.forEach((item,index)=>{
+        items = item.split('|||');
+        edits.dlt.service_policies[index] = {name:items[0],url:items[1]};
+      })
+    }
+    if(!old_values.infrastructures){
+      old_values.infrastructures = [];
+    }
+    if(!new_values.infrastructures){
+      new_values.infrastructures = [];
+    }
+    edits.add.infrastructures = new_values.infrastructures.filter(x=>!old_values.infrastructures.includes(x));
+    edits.dlt.infrastructures = old_values.infrastructures.filter(x=>!new_values.infrastructures.includes(x));
     if(new_values.protocol==='oidc'){
       if(!old_values.redirect_uris){
         old_values.redirect_uris = [];
@@ -114,6 +150,12 @@ const calcDiff = (oldState,newState,tenant) => {
       if(!new_values.post_logout_redirect_uris){
         new_values.post_logout_redirect_uris = [];
       }
+      if(!old_values.resource_indicators){
+        old_values.resource_indicators = [];
+      }
+      if(!new_values.resource_indicators){
+        new_values.resource_indicators = [];
+      }
 
       edits.add.oidc_grant_types = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
       edits.dlt.oidc_grant_types = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
@@ -123,6 +165,8 @@ const calcDiff = (oldState,newState,tenant) => {
       edits.dlt.oidc_redirect_uris = old_values.redirect_uris.filter(x=>!new_values.redirect_uris.includes(x));
       edits.add.oidc_post_logout_redirect_uris = new_values.post_logout_redirect_uris.filter(x=>!old_values.post_logout_redirect_uris.includes(x));
       edits.dlt.oidc_post_logout_redirect_uris = old_values.post_logout_redirect_uris.filter(x=>!new_values.post_logout_redirect_uris.includes(x));
+      edits.add.oidc_resource_indicators = new_values.resource_indicators.filter(x=>!old_values.resource_indicators.includes(x));
+      edits.dlt.oidc_resource_indicators = old_values.resource_indicators.filter(x=>!new_values.resource_indicators.includes(x));
     }
     if(new_values.protocol==='saml'){
       if(!old_values.requested_attributes){
@@ -134,7 +178,32 @@ const calcDiff = (oldState,newState,tenant) => {
       edits.add.requested_attributes = new_values.requested_attributes.filter(x=> !old_values.requested_attributes.some(e=> e.friendly_name === x.friendly_name));
       edits.dlt.requested_attributes = old_values.requested_attributes.filter(x=> !new_values.requested_attributes.some(e=> e.friendly_name === x.friendly_name));
       edits.update.requested_attributes = new_values.requested_attributes.filter(x=> old_values.requested_attributes.some(e=> e.friendly_name === x.friendly_name&&(e.required!==x.required||e.name!==x.name)));
+      if(!old_values.required_attributes){
+        old_values.required_attributes = [];
+      }
+      if(!new_values.required_attributes){
+        new_values.required_attributes = [];
+      }
+      edits.add.saml_required_attributes = new_values.required_attributes.filter(x=>!old_values.required_attributes.includes(x));
+      edits.dlt.saml_required_attributes = old_values.required_attributes.filter(x=>!new_values.required_attributes.includes(x));
     }
+
+    if(!old_values.rp_blocked_idps_desc){
+      old_values.rp_blocked_idps_desc = [];
+    }
+    if(!new_values.rp_blocked_idps_desc){
+      new_values.rp_blocked_idps_desc = [];
+    }
+    if(!old_values.rp_only_allowed_idps_desc){
+      old_values.rp_only_allowed_idps_desc = [];
+    }
+    if(!new_values.rp_only_allowed_idps_desc){
+      new_values.rp_only_allowed_idps_desc = [];
+    }
+    edits.add.rp_blocked_idps_desc = new_values.rp_blocked_idps_desc.filter(x=>!old_values.rp_blocked_idps_desc.includes(x));
+    edits.dlt.rp_blocked_idps_desc = old_values.rp_blocked_idps_desc.filter(x=>!new_values.rp_blocked_idps_desc.includes(x));
+    edits.add.rp_only_allowed_idps_desc = new_values.rp_only_allowed_idps_desc.filter(x=>!old_values.rp_only_allowed_idps_desc.includes(x));
+    edits.dlt.rp_only_allowed_idps_desc = old_values.rp_only_allowed_idps_desc.filter(x=>!new_values.rp_only_allowed_idps_desc.includes(x));
 
     for(var property in tenant_config[tenant].form.extra_fields){
       if(tenant_config[tenant].form.extra_fields[property].tag==="coc"||tenant_config[tenant].form.extra_fields[property].tag==="once"){
@@ -158,14 +227,28 @@ const calcDiff = (oldState,newState,tenant) => {
     }
     delete new_values.requested_attributes;
     delete old_values.requested_attributes;
+    delete new_values.service_policies;
+    delete new_values.infrastructures;
     delete new_values.grant_types;
     delete new_values.contacts;
     delete new_values.redirect_uris;
     delete new_values.scope;
     delete old_values.grant_types;
+    delete old_values.service_policies;
+    delete old_values.infrastructures;
     delete old_values.contacts;
     delete old_values.redirect_uris;
     delete old_values.scope;
+    delete new_values.post_logout_redirect_uris;
+    delete old_values.post_logout_redirect_uris;
+    delete new_values.resource_indicators;
+    delete old_values.resource_indicators;
+    delete new_values.required_attributes;
+    delete old_values.required_attributes;
+    delete new_values.rp_blocked_idps_desc;
+    delete old_values.rp_blocked_idps_desc;
+    delete new_values.rp_only_allowed_idps_desc;
+    delete old_values.rp_only_allowed_idps_desc;
     if(diff(old_values,new_values)){
       edits.details = new_values;
     }

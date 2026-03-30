@@ -20,7 +20,9 @@ class ServiceDetailsRepository {
     async add(data,sub){
       return this.db.one(sql.add,{
         service_description: data.service_description,
+        service_description_czech: data.service_description_czech,
         service_name: data.service_name,
+        service_name_czech: data.service_name_czech,
         logo_uri: data.logo_uri,
         policy_uri: data.policy_uri,
         integration_environment: data.integration_environment,
@@ -30,6 +32,17 @@ class ServiceDetailsRepository {
         protocol:data.protocol,
         tenant:data.tenant,
         website_url:data.website_url,
+        check_group_membership:data.check_group_membership,
+        require_vo_membership:data.require_vo_membership,
+        rp_ensure_membership_desc:data.rp_ensure_membership_desc,
+        require_group_membership:data.require_group_membership,
+        rp_ensure_group_membership_desc:data.rp_ensure_group_membership_desc,
+        create_group:data.create_group,
+        allow_registration:data.allow_registration,
+        dynamic_registration:data.dynamic_registration,
+        registration_url:data.registration_url,
+        service_login_url:data.service_login_url,
+        service_login_url_czech:data.service_login_url_czech,
         organization_id:data.organization_id,
         aup_uri:data.aup_uri
       })
@@ -53,7 +66,9 @@ class ServiceDetailsRepository {
     async update(data,id,sub){
         return this.db.oneOrNone(sql.update,{
           service_description: data.service_description,
+          service_description_czech: data.service_description_czech,
           service_name: data.service_name,
+          service_name_czech: data.service_name_czech,
           logo_uri: data.logo_uri,
           policy_uri: data.policy_uri,
           country:data.country,
@@ -62,6 +77,17 @@ class ServiceDetailsRepository {
           id:id,
           protocol:data.protocol,
           website_url:data.website_url,
+          check_group_membership:data.check_group_membership,
+          require_vo_membership:data.require_vo_membership,
+          rp_ensure_membership_desc:data.rp_ensure_membership_desc,
+          require_group_membership:data.require_group_membership,
+          rp_ensure_group_membership_desc:data.rp_ensure_group_membership_desc,
+          create_group:data.create_group,
+          allow_registration:data.allow_registration,
+          dynamic_registration:data.dynamic_registration,
+          registration_url:data.registration_url,
+          service_login_url:data.service_login_url,
+          service_login_url_czech:data.service_login_url_czech,
           aup_uri:data.aup_uri,
           organization_id:data.organization_id
         });
@@ -132,10 +158,10 @@ function createColumnsets(pgp) {
         // otherwise you can just pass in a string for the table name.
         const table = new pgp.helpers.TableName({table: 'service_details', schema: 'public'});
 
-        cs.insert = new pgp.helpers.ColumnSet(['service_description','service_name',
-          'logo_uri','policy_uri','integration_environment','country','requester','protocol','website_url','aup_uri','organization_id'],
+        cs.insert = new pgp.helpers.ColumnSet(['service_description','service_description_czech','service_name','service_name_czech',
+          'service_login_url','service_login_url_czech','logo_uri','policy_uri','integration_environment','country','requester','protocol','website_url','check_group_membership','require_vo_membership','rp_ensure_membership_desc','require_group_membership','rp_ensure_group_membership_desc','create_group','allow_registration','dynamic_registration','registration_url','aup_uri','organization_id'],
           {table});
-        cs.insert_multi = new pgp.helpers.ColumnSet(['external_id','tenant','service_name','group_id','service_description','logo_uri','policy_uri','country','integration_environment','protocol','website_url','aup_uri','organization_id'])
+        cs.insert_multi = new pgp.helpers.ColumnSet(['external_id','tenant','service_name','service_name_czech','group_id','service_description','service_description_czech','service_login_url','service_login_url_czech','logo_uri','policy_uri','country','integration_environment','protocol','website_url','check_group_membership','require_vo_membership','rp_ensure_membership_desc','require_group_membership','rp_ensure_group_membership_desc','create_group','allow_registration','dynamic_registration','registration_url','aup_uri','organization_id'])
         cs.update = cs.insert.extend(['?id','deleted']);
         cs.external_id = new pgp.helpers.ColumnSet(['?id','external_id'],{table:'service_details'});
     }

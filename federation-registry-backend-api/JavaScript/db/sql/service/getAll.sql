@@ -1,12 +1,18 @@
-SELECT json_build_object('id',sd.id,'service_name', sd.service_name,'service_description',sd.service_description,
+SELECT json_build_object('id',sd.id,'service_name', sd.service_name,'service_name_czech',sd.service_name_czech,'service_description',sd.service_description,'service_description_czech',sd.service_description_czech,
 						 'logo_uri',sd.logo_uri,'policy_uri',sd.policy_uri,'integration_environment',sd.integration_environment,'protocol',sd.protocol,
-						 'country',sd.country,'website_url',sd.website_url,'tenant',sd.tenant,'aup_uri',sd.aup_uri,'organization_name',sd.name,
+						 'country',sd.country,'website_url',sd.website_url,'service_login_url',sd.service_login_url,'service_login_url_czech',sd.service_login_url_czech,'tenant',sd.tenant,'aup_uri',sd.aup_uri,'organization_name',sd.name,
 						 'organization_url',sd.url,'organization_id',sd.organization_id,${all_properties_filter:raw}
 						 'service_boolean',(SELECT CASE WHEN  json_object_agg(v.name,v.value) IS NULL THEN NULL ELSE  json_object_agg(v.name,v.value) END
 						 FROM service_boolean v WHERE sd.id = v.service_id),'created_at',created_at,
 						 'contacts',
 						 	(SELECT json_agg(json_build_object('email',v.value,'type',v.type))
 							 FROM service_contacts v WHERE sd.id = v.owner_id),
+						 'service_policies',
+						 	(SELECT coalesce(json_agg(json_build_object('name',v.name,'url',v.url)), '[]'::json)
+						 	 FROM service_policies v WHERE sd.id = v.owner_id),
+						 'infrastructures',
+						 	(SELECT CASE WHEN array_agg((v.value)) IS NULL THEN Array[]::varchar[] ELSE array_agg((v.value)) END
+						 	 FROM service_infrastructures v WHERE sd.id = v.owner_id),
 							 'owners',
 							 (SELECT json_agg((v.sub))
 						 		FROM group_subs v WHERE sd.group_id = v.group_id)

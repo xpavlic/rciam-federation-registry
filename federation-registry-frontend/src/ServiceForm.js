@@ -444,7 +444,28 @@ const ServiceForm = (props)=> {
       then: yup.string().test('testCountry','Select one of the available options',function(value){return countries.includes(value)}).required(t('yup_required')),
       otherwise: yup.string().nullable(),
     }),
-    service_description:yup.string().nullable().required(t('yup_required')).max(1000,'Exceeded maximum characters (1000)'),
+    service_description:yup.string().nullable().required(t('yup_required')).max(255,'Exceeded maximum characters (255)'),
+    service_description_czech:yup.string().nullable().required(t('yup_required')).max(255,'Exceeded maximum characters (255)'),
+    infrastructures: yup.array().nullable().when('integration_environment', {
+      is: (integration_environment) => tenant.form_config.extra_fields.infrastructures?.required.includes(integration_environment) || false,
+      then: yup.array().min(1, 'Select at least one infrastructure').of(yup.string()),
+      otherwise: yup.array().nullable().of(yup.string())
+    }),
+    service_policies:yup.array().nullable().of(yup.object().shape({
+      name:yup.string().nullable().required(t('yup_required')).test('testPolicyTypeValue','Invalid policy type',function(value){
+        if(policyTypeValues.length === 0){
+          return true;
+        }
+        return policyTypeValues.includes(value);
+      }),
+      url:yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url'))
+    })).test('testPolicyTypesUnique','Policy type must be unique',function(value){
+      if(!value){
+        return true;
+      }
+      const uniqueTypes = new Set(value.map((item)=>item.name));
+      return uniqueTypes.size === value.length;
+    }),
     requested_attributes: yup.array().nullable().of(yup.object().shape({
       name:yup.string().nullable().required(t('yup_required')).min(1,t('yup_required')).required(t('yup_required')).max(512,'Exceeded maximum characters (512)'),
       friendly_name:yup.string().test('testAttributeName','invalid_name',function(friendly_name){
@@ -943,6 +964,12 @@ const ServiceForm = (props)=> {
 
   const postApi= async (data)=>{
     data = generateValues(data);
+    // Ensure new fields are always present (even if empty) to pass backend validation
+    if (!data.hasOwnProperty('service_policies')) data.service_policies = [];
+    if (!data.hasOwnProperty('infrastructures')) data.infrastructures = [];
+    if (!data.hasOwnProperty('service_login_url')) data.service_login_url = '';
+    if (!data.hasOwnProperty('service_login_url_czech')) data.service_login_url_czech = '';
+    
     let organization_id;
     if(!tenant.form_config.extra_fields.organization.hide.includes(data.integration_environment)){
       organization_id = await addOrganization(data);
@@ -988,6 +1015,13 @@ const ServiceForm = (props)=> {
     return options
   }
 
+  // Memoize the options so they don't trigger re-render loops
+  const infrastructureOptions = React.useMemo(() => 
+    tenant?.form_config?.extra_fields?.infrastructures?.options || [], 
+    [tenant]
+  );
+
+  const infrastructureOptionsMemo = infrastructureOptions;
 
   return(
     <React.Fragment>
@@ -1103,18 +1137,137 @@ const ServiceForm = (props)=> {
 
                   <Tab eventKey="general" title={t('form_tab_general')}>
 
-                    <InputRow  moreInfo={tenant.form_config.more_info.service_name} title={t('form_service_name')} required={true} description={t('form_service_name_desc')} error={errors.service_name} touched={touched.service_name}>
-                      <SimpleInput
-                        name='service_name'
-                        placeholder={t('form_type_prompt')}
-                        onChange={handleChange}
-                        value={values.service_name}
-                        isInvalid={hasSubmitted?!!errors.service_name:(!!errors.service_name&&touched.service_name)}
-                        onBlur={handleBlur}
-                        disabled={disabled}
-                        changed={props.changes?props.changes.service_name:null}
-                       />
-                     </InputRow>
+                                          <InputRow 
+                        moreInfo={tenant.form_config.more_info.service_name} 
+                        title={t('form_service_name')} 
+                        required={true} 
+                        description={t('form_service_name_desc')} 
+                        error={(errors.service_name || errors.service_name_czech) ? "Both English and Czech names are required" : null} 
+                        touched={touched.service_name || touched.service_name_czech}
+                      >
+                        {/* English Input */}
+                        <div className="d-flex align-items-start mb-2">
+                          <span className="badge bg-secondary me-2 mt-2" style={{minWidth: '35px', marginRight: '12px'}}>EN</span>
+                          <div className="flex-grow-1">
+                            <SimpleInput
+                              name='service_name'
+                              placeholder={t('form_type_prompt')}
+                              onChange={handleChange}
+                              value={values.service_name}
+                              isInvalid={hasSubmitted ? !!errors.service_name : (!!errors.service_name && touched.service_name)}
+                              onBlur={handleBlur}
+                              disabled={disabled}
+                              changed={props.changes ? props.changes.service_name : null}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Czech Input */}
+                        <div className="d-flex align-items-start">
+                          <span className="badge bg-secondary me-2 mt-2" style={{minWidth: '35px', marginRight: '12px'}}>CS</span>
+                          <div className="flex-grow-1">
+                            <SimpleInput
+                              name='service_name_czech'
+                              placeholder="Název služby" // Optional: Czech placeholder
+                              onChange={handleChange}
+                              value={values.service_name_czech || ''}
+                              isInvalid={hasSubmitted ? !!errors.service_name_czech : (!!errors.service_name_czech && touched.service_name_czech)}
+                              onBlur={handleBlur}
+                              disabled={disabled}
+                              changed={props.changes ? props.changes.service_name_czech : null}
+                            />
+                          </div>
+                        </div>
+                      </InputRow>
+
+                    <InputRow 
+                      moreInfo={tenant.form_config.more_info.service_description} 
+                      title={t('form_description')} 
+                      required={true} 
+                      description={t('form_description_desc')} 
+                      error={(errors.service_description || errors.service_description_czech) ? "Both descriptions are required" : null} 
+                      touched={touched.service_description || touched.service_description_czech}
+                    >
+                      {/* English Input */}
+                      <div className="d-flex align-items-start mb-3">
+                        <span className="badge bg-secondary me-2 mt-2" style={{minWidth: '35px', marginRight: '12px'}}>EN</span>
+                        <div className="flex-grow-1">
+                          <TextAria
+                            value={values.service_description ? values.service_description : ''}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            name='service_description'
+                            placeholder={t('form_type_prompt')}
+                            isInvalid={hasSubmitted ? !!errors.service_description : (!!errors.service_description && touched.service_description)}
+                            disabled={disabled}
+                            changed={props.changes ? props.changes.service_description : null}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Czech Input */}
+                      <div className="d-flex align-items-start">
+                        <span className="badge bg-secondary me-2 mt-2" style={{minWidth: '35px', marginRight: '12px'}}>CS</span>
+                        <div className="flex-grow-1">
+                          <TextAria
+                            value={values.service_description_czech ? values.service_description_czech : ''}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            name='service_description_czech'
+                            placeholder="Popis služby"
+                            isInvalid={hasSubmitted ? !!errors.service_description_czech : (!!errors.service_description_czech && touched.service_description_czech)}
+                            disabled={disabled}
+                            changed={props.changes ? props.changes.service_description_czech : null}
+                          />
+                        </div>
+                      </div>
+                    </InputRow>
+
+                    <InputRow 
+                      moreInfo={tenant.form_config.more_info.service_login_url} 
+                      title="Service login URL" 
+                      required={true}
+                      description={tenant.form_config.more_info.service_login_url?.description}
+                      error={errors.service_login_url || errors.service_login_url_czech ? "Provide valid URLs for both languages" : null}
+                      touched={touched.service_login_url || touched.service_login_url_czech}
+                    >
+                      {/* English Input */}
+                      <div className="d-flex align-items-start mb-3">
+                        <span className="badge bg-secondary me-2 mt-2" style={{minWidth: '35px', marginRight: '12px'}}>EN</span>
+                        <div className="flex-grow-1">
+                          <SimpleInput
+                            name='service_login_url'
+                            placeholder={t('form_url_placeholder')}
+                            onChange={handleChange}
+                            value={values.service_login_url || ''}
+                            isInvalid={hasSubmitted ? !!errors.service_login_url : (!!errors.service_login_url && touched.service_login_url)}
+                            onBlur={handleBlur}
+                            disabled={disabled}
+                            changed={props.changes ? props.changes.service_login_url : null}
+                          />
+                          <UrlWarning url={values.service_login_url} touched={hasSubmitted || touched.service_login_url}/>
+                        </div>
+                      </div>
+
+                      {/* Czech Input */}
+                      <div className="d-flex align-items-start">
+                        <span className="badge bg-secondary me-2 mt-2" style={{minWidth: '35px', marginRight: '12px'}}>CS</span>
+                        <div className="flex-grow-1">
+                          <SimpleInput
+                            name='service_login_url_czech'
+                            placeholder={t('form_url_placeholder')}
+                            onChange={handleChange}
+                            value={values.service_login_url_czech || ''}
+                            isInvalid={hasSubmitted ? !!errors.service_login_url_czech : (!!errors.service_login_url_czech && touched.service_login_url_czech)}
+                            onBlur={handleBlur}
+                            disabled={disabled}
+                            changed={props.changes ? props.changes.service_login_url_czech : null}
+                          />
+                          <UrlWarning url={values.service_login_url_czech} touched={hasSubmitted || touched.service_login_url_czech}/>
+                        </div>
+                      </div>
+                    </InputRow>
+
                       <InputRow  moreInfo={tenant.form_config.more_info.integration_environment} title={t('form_integration_environment')} required={true} extraClass='select-col' error={errors.integration_environment} touched={touched.integration_environment}>
                         <SelectEnvironment
                           onBlur={handleBlur}
@@ -1162,19 +1315,37 @@ const ServiceForm = (props)=> {
                         <UrlWarning url={values.website_url} touched={hasSubmitted||touched.website_url}/> 
                      </InputRow>
 
-                      <InputRow  moreInfo={tenant.form_config.more_info.service_description} title={t('form_description')} required={true} description={t('form_description_desc')} error={errors.service_description} touched={touched.service_description}>
-                        <TextAria
-                          value={values.service_description?values.service_description:''}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                          name='service_description'
-                          placeholder={t('form_type_prompt')}
-                          isInvalid={hasSubmitted?!!errors.service_description:(!!errors.service_description&&touched.service_description)}
-                          disabled={disabled}
-                          changed={props.changes?props.changes.service_description:null}
-                        />
-                      </InputRow>
-                      <InputRow  moreInfo={tenant.form_config.more_info.country} title={'Select country'} required={tenant?.form_config?.more_info?.country?.required.includes(values.integration_environment)} extraClass='select-col' error={errors.country} touched={touched.country}>
+                  {tenant.form_config.extra_fields.infrastructures ?
+                  <InputRow  moreInfo={tenant.form_config.more_info.infrastructures} title={'Infrastructures'} required={tenant.form_config.extra_fields.infrastructures.required.includes(values.integration_environment)} error={typeof(errors.infrastructures)==='string'?errors.infrastructures:null} touched={touched.infrastructures} description={'Select the infrastructures supported by your service.'}>
+                    <CheckboxList
+                      name='infrastructures'
+                      values={values.infrastructures}
+                      listItems={infrastructureOptions}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      disabled={disabled}
+                      changed={props.changes?props.changes.infrastructures:null}
+                    />
+                  </InputRow>
+                : null}
+
+                    <InputRow moreInfo={tenant.form_config.more_info.service_policies} title={'Service Policies'} required={true} error={Array.isArray(errors.service_policies)?'Please provide valid policy URL and type':''} touched={touched.service_policies} description={'Add policy URL and select policy type.'}>
+                      <ServicePolicies
+                        values={values.service_policies}
+                        name='service_policies'
+                        empty={typeof(errors.service_policies)==='string'}
+                        error={errors.service_policies}
+                        touched={touched.service_policies}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        setFieldTouched={setFieldTouched}
+                        disabled={disabled}
+                        policyTypeOptions={policyTypeOptions}
+                        changed={props.changes?props.changes.service_policies:null}
+                      />
+                    </InputRow>
+
+                      <InputRow hide={!tenant?.form_config?.more_info?.country?.enabled} moreInfo={tenant.form_config.more_info.country.description} title={'Jurisdiction of the Service'} required={tenant?.form_config?.more_info?.country?.required.includes(values.integration_environment) && tenant.form_config.more_info.country.enabled} extraClass='select-col' error={errors.country} touched={touched.country}>
                         <CountrySelect
                           onBlur={handleBlur}
                           placeholder={'Select country'}

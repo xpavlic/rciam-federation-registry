@@ -143,6 +143,10 @@ router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,fo
               let grant_types = [];
               let redirect_uris = [];
               let post_logout_redirect_uris = [];
+              let resource_indicators = [];
+              let rp_blocked_idps_desc = [];
+              let rp_only_allowed_idps_desc = [];
+              let required_attributes = [];
               let scopes = [];
               let queries = [];
               let service_state = [];
@@ -179,6 +183,11 @@ router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,fo
                       post_logout_redirect_uris.push({owner_id:service.id,value:post_logout_redirect_uri});
                     });
                   }
+                  if(service.resource_indicators && service.resource_indicators.length>0){
+                    service.resource_indicators.forEach(resource_indicator => {
+                      resource_indicators.push({owner_id:service.id,value:resource_indicator});
+                    });
+                  }
                 }
                 if(service.protocol==='saml'){
                   if(service.requested_attributes&&service.requested_attributes.length>0){
@@ -186,6 +195,21 @@ router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,fo
                       requested_attributes.push({owner_id:service.id,...attribute})
                     });
                   }
+                  if(service.required_attributes&&service.required_attributes.length>0){
+                    service.required_attributes.forEach(attribute=>{
+                      required_attributes.push({owner_id:service.id,value:attribute});
+                    });
+                  }
+                }
+                if(service.rp_blocked_idps_desc && service.rp_blocked_idps_desc.length>0){
+                  service.rp_blocked_idps_desc.forEach(idp=>{
+                    rp_blocked_idps_desc.push({owner_id:service.id,value:idp});
+                  });
+                }
+                if(service.rp_only_allowed_idps_desc && service.rp_only_allowed_idps_desc.length>0){
+                  service.rp_only_allowed_idps_desc.forEach(idp=>{
+                    rp_only_allowed_idps_desc.push({owner_id:service.id,value:idp});
+                  });
                 } 
               });
               queries.push(t.service_state.addMultiple(service_state));
@@ -205,8 +229,20 @@ router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,fo
               if(post_logout_redirect_uris.length>0){
                 queries.push(t.service_multi_valued.addMultiple(post_logout_redirect_uris,'service_oidc_post_logout_redirect_uris'));
               }
+              if(resource_indicators.length>0){
+                queries.push(t.service_multi_valued.addMultiple(resource_indicators,'service_oidc_resource_indicators'));
+              }
               if(requested_attributes&&requested_attributes.length>0){
                 queries.push(t.service_multi_valued.addSamlAttributesMultiple(requested_attributes,'service_saml_attributes'));
+              }
+              if(required_attributes.length>0){
+                queries.push(t.service_multi_valued.addMultiple(required_attributes,'service_saml_required_attributes'));
+              }
+              if(rp_blocked_idps_desc.length>0){
+                queries.push(t.service_multi_valued.addMultiple(rp_blocked_idps_desc,'service_rp_blocked_idps_desc'));
+              }
+              if(rp_only_allowed_idps_desc.length>0){
+                queries.push(t.service_multi_valued.addMultiple(rp_only_allowed_idps_desc,'service_rp_only_allowed_idps_desc'));
               }
               await t.batch(queries).then(done=>{
                 if(done){
