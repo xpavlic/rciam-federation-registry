@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS user_edu_person_entitlement,tokens,user_info, service_petition_contacts, service_petition_oidc_grant_types,service_boolean,service_petition_boolean,service_saml_attributes,service_petition_saml_attributes, service_petition_oidc_redirect_uris,service_petition_oidc_post_logout_redirect_uris, service_petition_oidc_scopes,
-service_petition_details_oidc,service_petition_details_saml, service_petition_details, service_oidc_scopes,service_contacts,service_oidc_grant_types,service_oidc_redirect_uris,service_oidc_post_logout_redirect_uris,service_details_oidc,
+DROP TABLE IF EXISTS user_edu_person_entitlement,tokens,user_info, service_petition_contacts, service_petition_oidc_grant_types,service_boolean,service_petition_boolean,service_saml_attributes,service_petition_saml_attributes,service_saml_required_attributes,service_petition_saml_required_attributes,service_rp_blocked_idps_desc,service_rp_only_allowed_idps_desc,service_petition_rp_blocked_idps_desc,service_petition_rp_only_allowed_idps_desc, service_petition_oidc_redirect_uris,service_petition_oidc_post_logout_redirect_uris,service_oidc_resource_indicators,service_petition_oidc_resource_indicators, service_petition_oidc_scopes, service_policies, service_petition_policies, 
+service_petition_details_oidc,service_petition_details_saml, service_petition_details, service_oidc_scopes,service_contacts,service_oidc_grant_types,service_oidc_redirect_uris,service_oidc_post_logout_redirect_uris,service_details_oidc, service_infrastructures, service_petition_infrastructures,
 service_details_saml,service_details,service_state,user_roles,role_actions,role_entitlements,groups,invitations,group_subs,tenant_deployer_agents,banner_alerts,deployment_tasks,service_errors,organizations,service_tags,tenants;
 
 create table tokens (
@@ -108,8 +108,10 @@ create table service_details (
   tenant VARCHAR(256),
   website_url VARCHAR(256) DEFAULT NULL,
   service_name  VARCHAR(256),
+  service_name_czech VARCHAR(255),
   group_id INTEGER,
   service_description VARCHAR(1024),
+  service_description_czech VARCHAR(255),
   logo_uri VARCHAR(2048),
   policy_uri VARCHAR(2048),
   service_login_url VARCHAR(2048),
@@ -118,6 +120,15 @@ create table service_details (
   country VARCHAR(256),
   requester VARCHAR(256),
   protocol VARCHAR(256),
+  check_group_membership BOOLEAN DEFAULT FALSE,
+  require_vo_membership BOOLEAN DEFAULT FALSE,
+  rp_ensure_membership_desc VARCHAR(255),
+  require_group_membership BOOLEAN DEFAULT FALSE,
+  rp_ensure_group_membership_desc VARCHAR(255),
+  create_group BOOLEAN DEFAULT FALSE,
+  allow_registration BOOLEAN DEFAULT FALSE,
+  dynamic_registration BOOLEAN DEFAULT FALSE,
+  registration_url VARCHAR(2048),
   aup_uri VARCHAR(256) DEFAULT NULL,
   deleted BOOLEAN DEFAULT FALSE,
   organization_id INTEGER,
@@ -146,7 +157,6 @@ create table service_details_oidc (
   FOREIGN KEY (id) REFERENCES service_details(id) ON DELETE CASCADE
 );
 
-
 create table service_state (
   id bigint PRIMARY KEY,
   state VARCHAR(256),
@@ -173,6 +183,9 @@ create table service_details_saml (
   id bigint PRIMARY KEY,
   entity_id VARCHAR(256),
   metadata_url VARCHAR(256),
+  assertion_consumer_service VARCHAR(2048),
+  single_logout_service VARCHAR(2048),
+  signing_cert TEXT,
   FOREIGN KEY (id) REFERENCES service_details(id) ON DELETE CASCADE
 );
 
@@ -208,11 +221,32 @@ create table service_oidc_post_logout_redirect_uris (
   FOREIGN KEY (owner_id) REFERENCES service_details(id) ON DELETE CASCADE
 );
 
+create table service_oidc_resource_indicators (
+  id SERIAL PRIMARY KEY,
+  owner_id bigint,
+  value VARCHAR(2048),
+  FOREIGN KEY (owner_id) REFERENCES service_details(id) ON DELETE CASCADE
+);
+
 
 create table service_oidc_scopes (
   id SERIAL PRIMARY KEY,
   owner_id bigint,
   value VARCHAR(256),
+  FOREIGN KEY (owner_id) REFERENCES service_details(id) ON DELETE CASCADE
+);
+
+create table service_rp_blocked_idps_desc (
+  id SERIAL PRIMARY KEY,
+  owner_id bigint,
+  value VARCHAR(512),
+  FOREIGN KEY (owner_id) REFERENCES service_details(id) ON DELETE CASCADE
+);
+
+create table service_rp_only_allowed_idps_desc (
+  id SERIAL PRIMARY KEY,
+  owner_id bigint,
+  value VARCHAR(512),
   FOREIGN KEY (owner_id) REFERENCES service_details(id) ON DELETE CASCADE
 );
 
@@ -225,6 +259,13 @@ create table service_saml_attributes (
   FOREIGN KEY (owner_id) REFERENCES service_details(id) ON DELETE CASCADE
 );
 
+create table service_saml_required_attributes (
+  id SERIAL PRIMARY KEY,
+  owner_id bigint,
+  value VARCHAR(512),
+  FOREIGN KEY (owner_id) REFERENCES service_details(id) ON DELETE CASCADE
+);
+
 
 
 create table service_petition_details (
@@ -233,6 +274,7 @@ create table service_petition_details (
   tenant VARCHAR(256),
   website_url VARCHAR(256) DEFAULT NULL,
   service_description VARCHAR(1024),
+  service_description_czech VARCHAR(255),
   service_name  VARCHAR(256),
   service_name_czech VARCHAR(255),
   service_login_url VARCHAR(2048),
@@ -247,6 +289,15 @@ create table service_petition_details (
   protocol VARCHAR(256),
   requester VARCHAR(256),
   reviewer VARCHAR(256) DEFAULT NULL,
+  check_group_membership BOOLEAN DEFAULT FALSE,
+  require_vo_membership BOOLEAN DEFAULT FALSE,
+  rp_ensure_membership_desc VARCHAR(255),
+  require_group_membership BOOLEAN DEFAULT FALSE,
+  rp_ensure_group_membership_desc VARCHAR(255),
+  create_group BOOLEAN DEFAULT FALSE,
+  allow_registration BOOLEAN DEFAULT FALSE,
+  dynamic_registration BOOLEAN DEFAULT FALSE,
+  registration_url VARCHAR(2048),
   aup_uri VARCHAR(256) DEFAULT NULL,
   group_id INTEGER DEFAULT NULL,
   last_edited timestamp without time zone DEFAULT NULL,
@@ -301,6 +352,9 @@ create table service_petition_details_saml (
   id bigint PRIMARY KEY,
   entity_id VARCHAR(256),
   metadata_url VARCHAR(256),
+  assertion_consumer_service VARCHAR(2048),
+  single_logout_service VARCHAR(2048),
+  signing_cert TEXT,
   FOREIGN KEY (id) REFERENCES service_petition_details(id) ON DELETE CASCADE
 );
 
@@ -344,12 +398,40 @@ create table service_petition_oidc_post_logout_redirect_uris (
   FOREIGN KEY (owner_id) REFERENCES service_petition_details(id) ON DELETE CASCADE
 );
 
+create table service_petition_oidc_resource_indicators (
+  id SERIAL PRIMARY KEY,
+  owner_id bigint,
+  value VARCHAR(2048),
+  FOREIGN KEY (owner_id) REFERENCES service_petition_details(id) ON DELETE CASCADE
+);
+
 
 
 create table service_petition_oidc_scopes (
   id SERIAL PRIMARY KEY,
   owner_id bigint,
   value VARCHAR(256),
+  FOREIGN KEY (owner_id) REFERENCES service_petition_details(id) ON DELETE CASCADE
+);
+
+create table service_petition_rp_blocked_idps_desc (
+  id SERIAL PRIMARY KEY,
+  owner_id bigint,
+  value VARCHAR(512),
+  FOREIGN KEY (owner_id) REFERENCES service_petition_details(id) ON DELETE CASCADE
+);
+
+create table service_petition_rp_only_allowed_idps_desc (
+  id SERIAL PRIMARY KEY,
+  owner_id bigint,
+  value VARCHAR(512),
+  FOREIGN KEY (owner_id) REFERENCES service_petition_details(id) ON DELETE CASCADE
+);
+
+create table service_petition_saml_required_attributes (
+  id SERIAL PRIMARY KEY,
+  owner_id bigint,
+  value VARCHAR(512),
   FOREIGN KEY (owner_id) REFERENCES service_petition_details(id) ON DELETE CASCADE
 );
 
@@ -397,6 +479,37 @@ create table service_tags (
   FOREIGN KEY (tenant) REFERENCES tenants(name) ON DELETE CASCADE,
   PRIMARY KEY (tag,service_id)
 );
+
+create table service_policies (
+  id SERIAL PRIMARY KEY,
+  owner_id bigint,
+  name VARCHAR(256),
+  url VARCHAR(2048),
+  FOREIGN KEY (owner_id) REFERENCES service_details(id) ON DELETE CASCADE
+);
+
+create table service_infrastructures (
+  id SERIAL PRIMARY KEY,
+  owner_id bigint,
+  value VARCHAR(256),
+  FOREIGN KEY (owner_id) REFERENCES service_details(id) ON DELETE CASCADE
+);
+
+create table service_petition_infrastructures (
+  id SERIAL PRIMARY KEY,
+  owner_id bigint,
+  value VARCHAR(256),
+  FOREIGN KEY (owner_id) REFERENCES service_petition_details(id) ON DELETE CASCADE
+);
+
+create table service_petition_policies (
+  id SERIAL PRIMARY KEY,
+  owner_id bigint,
+  name VARCHAR(256),
+  url VARCHAR(2048),
+  FOREIGN KEY (owner_id) REFERENCES service_petition_details(id) ON DELETE CASCADE
+);
+
 
 INSERT INTO organizations(name,url)
 VALUES ('Andreas Foundation','https://andreaskozadinos.com');

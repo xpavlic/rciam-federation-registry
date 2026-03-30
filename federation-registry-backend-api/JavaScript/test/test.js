@@ -46,6 +46,88 @@ describe('Service registry API Integration Tests', function() {
       postPetitionError(validationRequests.saml_values,'tenant_1',validationResponses.create.saml_values,done);
     })
   })
+  describe('# Added fields coverage', function(){
+    let addedFieldsPetitionId;
+
+    it('should create petition with added OIDC/access-control fields', function(done){
+      const suffix = Date.now().toString(36);
+      const payload = {
+        ...create.oidc,
+        client_id: 'added_fields_' + suffix,
+        post_logout_redirect_uris: ['https://logout.example.com/callback'],
+        resource_indicators: ['https://resource.example.com/api'],
+        infrastructures: ['EOSC'],
+        check_group_membership: true,
+        require_vo_membership: true,
+        rp_ensure_membership_desc: 'test-vo',
+        require_group_membership: true,
+        rp_ensure_group_membership_desc: 'test-group',
+        create_group: true,
+        allow_registration: true,
+        dynamic_registration: true,
+        registration_url: 'https://register.example.com',
+        rp_blocked_idps_desc: ['https://idp-blocked.example.org'],
+        rp_only_allowed_idps_desc: ['https://idp-allowed.example.org']
+      };
+
+      userToken = setUser(users.tenant_1.operator_user);
+      var req = request(server).post('/tenants/tenant_1/petitions').set({Authorization: userToken}).send({
+        type:'create',
+        ...payload
+      });
+
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        let body = JSON.parse(res.text);
+        expect(res.statusCode).to.equal(200);
+        expect(body.id).to.be.a('number');
+        addedFieldsPetitionId = body.id;
+        done();
+      });
+    });
+
+    it('should persist added fields in created petition', function(done){
+      var req = request(server).get('/tenants/tenant_1/petitions/' + addedFieldsPetitionId + '?type=open').set({Authorization: userToken});
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        let body = JSON.parse(res.text);
+        expect(res.statusCode).to.equal(200);
+        expect(body.petition.post_logout_redirect_uris).to.eql(['https://logout.example.com/callback']);
+        expect(body.petition.resource_indicators).to.eql(['https://resource.example.com/api']);
+        expect(body.petition.service_name_czech).to.be.a('string');
+        expect(body.petition.service_description_czech).to.be.a('string');
+        expect(body.petition.infrastructures).to.eql(['EOSC']);
+        expect(body.petition.service_policies).to.be.an('array');
+        expect(body.petition.check_group_membership).to.equal(true);
+        expect(body.petition.require_vo_membership).to.equal(true);
+        expect(body.petition.rp_ensure_membership_desc).to.equal('test-vo');
+        expect(body.petition.require_group_membership).to.equal(true);
+        expect(body.petition.rp_ensure_group_membership_desc).to.equal('test-group');
+        expect(body.petition.create_group).to.equal(true);
+        expect(body.petition.allow_registration).to.equal(true);
+        expect(body.petition.dynamic_registration).to.equal(true);
+        expect(body.petition.registration_url).to.equal('https://register.example.com');
+        expect(body.petition.rp_blocked_idps_desc).to.eql(['https://idp-blocked.example.org']);
+        expect(body.petition.rp_only_allowed_idps_desc).to.eql(['https://idp-allowed.example.org']);
+        done();
+      });
+    });
+
+    it('should delete added fields petition', function(done){
+      var req = request(server).delete('/tenants/tenant_1/petitions/' + addedFieldsPetitionId).set({Authorization: userToken});
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        expect(res.statusCode).to.equal(200);
+        done();
+      });
+    });
+  });
   describe('# OIDC Petition lifecycle',function(){
     describe('# Create Petition',function(){
       it('should check availability of client_id',function(done){

@@ -1,7 +1,16 @@
+const uniqueTestSuffix = Date.now().toString(36);
+
 const create = {
   oidc:{
      service_name:"Test Oidc Service",
      service_description:"This is a test service",
+     service_name_czech: "Testovací služba",
+     service_description_czech: "Toto je testovací popis",
+     service_policies: [{
+        "name": "Privacy Policy",
+        "url": "https://example.com/policy"
+        }
+     ],
      redirect_uris: ["https://redirecturi1.com"],
      post_logout_redirect_uris: ["https://test.com"],
      logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
@@ -33,7 +42,7 @@ const create = {
      jwks:{"keys":[]},
      jwks_uri:"",
      entity_id:null,
-     client_id:"testCreate",
+    client_id:`testCreate_${uniqueTestSuffix}`,
      allow_introspection:false,
      code_challenge_method:"plain",
      device_code_validity_seconds:800,
@@ -63,6 +72,13 @@ const create = {
    saml:{
      service_name:"Test Saml Service",
      service_description:"This is a test service",
+     service_name_czech: "Testovací služba",
+     service_description_czech: "Toto je testovací popis",
+     service_policies: [{
+        "name": "Privacy Policy",
+        "url": "https://example.com/policy"
+        }
+     ],
      redirect_uris: null,
      post_logout_redirect_uris:null,
      logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
@@ -87,7 +103,7 @@ const create = {
      "type": "admin"
    }],
      metadata_url:'https://metadata.com',
-     entity_id:"https://entity_id.com",
+    entity_id:`https://entity_id_${uniqueTestSuffix}.com`,
      aup_uri:"https://test.com",
      organization_id:1,
      client_id:null,
@@ -110,6 +126,13 @@ const edit = {
  oidc:{
    "service_name":"Test Oidc Service",
    "service_description":"This is a test service edit",
+    "service_name_czech": "Testovací služba - zeditovana",
+    "service_description_czech": "Toto je zmenený testovací popis",
+    "service_policies": [{
+      "name": "Privacy Policy",
+      "url": "https://example.com/policy"
+    }
+    ],
    "redirect_uris":[
       "https://redirecturi1edit.com",
       "https://redirecturi1edit.com"
@@ -148,7 +171,7 @@ const edit = {
    "aup_uri":"https://test.com",
    "organization_id":1,
    "entity_id":"",
-   "client_id":"testCreate2",
+  "client_id":`testCreate2_${uniqueTestSuffix}`,
    "allow_introspection":false,
    "code_challenge_method":"plain",
    "device_code_validity_seconds":"800",
@@ -173,7 +196,13 @@ const edit = {
    "dpcoco":false
 },
  saml:{
-
+   service_name_czech: "Testovací služba",
+   service_description_czech: "Toto je testovací popis",
+   service_policies: [{
+    "name": "Privacy Policy",
+    "url": "https://example.com/policy"
+    }
+   ],
    service_name:"Test Saml Service edit",
    service_description:"This is a test service edit",
    redirect_uris:null,
@@ -200,7 +229,7 @@ const edit = {
  }
    ],
    metadata_url:'https://metadataedit.com',
-   entity_id:"https://entity_id_edit.com",
+  entity_id:`https://entity_id_edit_${uniqueTestSuffix}.com`,
    aup_uri:"https://test.com",
    organization_id:1,
    client_id:null,
