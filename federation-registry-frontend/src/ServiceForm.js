@@ -467,8 +467,11 @@ const ServiceForm = (props)=> {
         if(!value){
           return true;
         }
-        if(value.length < 2 || value.length > 128){
+        if(value.length < 2){
           return this.createError({ message: t('yup_char_min') + ' (' + 2 + ')' });
+        }
+        if(value.length > 128) {
+          return this.createError({ message: t('yup_char_max') + ' (' + 128 + ')' });
         }
         return reg.regClientId.test(value);
       }).test('testAvailable',t('yup_client_id_available'),function(value){
