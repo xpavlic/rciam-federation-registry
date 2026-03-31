@@ -1544,7 +1544,7 @@ const hasPolicyTypeOptions = Array.isArray(props.policyTypeOptions) && props.pol
                       {({field})=> (
                         <Form.Control
                           {...field}
-                          onBlur={props.handleBlur}
+                          onBlur={props.onBlur}
                           onChange={props.onChange}
                           isInvalid={Array.isArray(props.error)&&props.error[index]?true:false}
                           column="true"
@@ -1562,7 +1562,7 @@ const hasPolicyTypeOptions = Array.isArray(props.policyTypeOptions) && props.pol
                         <Form.Control
                           {...field}
                           as="select"
-                          onBlur={props.handleBlur}
+                          onBlur={props.onBlur}
                           onChange={props.onChange}
                           isInvalid={Array.isArray(props.error)&&props.error[index]?true:false}
                           className='input-hide'
@@ -1576,7 +1576,7 @@ const hasPolicyTypeOptions = Array.isArray(props.policyTypeOptions) && props.pol
                         :
                         <Form.Control
                           {...field}
-                          onBlur={props.handleBlur}
+                          onBlur={props.onBlur}
                           onChange={props.onChange}
                           isInvalid={Array.isArray(props.error)&&props.error[index]?true:false}
                           column="true"
