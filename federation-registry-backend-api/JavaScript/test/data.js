@@ -15,7 +15,6 @@ const create = {
      redirect_uris: ["https://redirecturi1.com"],
      post_logout_redirect_uris: ["https://test.com"],
      logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
-     policy_uri:"https://policyuri.com",
      integration_environment:"development",
      protocol:"oidc",
      contacts:[ {
@@ -83,7 +82,6 @@ const create = {
      redirect_uris: null,
      post_logout_redirect_uris:null,
      logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
-     policy_uri:"https://policyuri.com",
      integration_environment:"development",
      protocol:"saml",
      country:"gr",
@@ -142,7 +140,6 @@ const edit = {
       "https://post_logout_redirect_uri.com"
    ],
    "logo_uri":"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
-   "policy_uri":"https://policyuriedit.com",
    "integration_environment":"development",
    "protocol":"oidc",
    "contacts":[{
@@ -209,7 +206,6 @@ const edit = {
    redirect_uris:null,
    post_logout_redirect_uris:null,
    logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
-   policy_uri:"https://policyuriedit.com",
    integration_environment:"development",
    protocol:"saml",
    contacts:[{
@@ -251,7 +247,6 @@ const edit = {
 
 const postServices = [
   {
-    "policy_uri": "https://www.policy_uri.com",
     "integration_environment": "development",
     "protocol": "oidc",
     "client_id": "clqweient1",
@@ -308,7 +303,6 @@ const postServices = [
     "client_id": "testtest",
     "service_description": "Sample description",
     "logo_uri": "https://www.freelogodesign.org/Content/img/logo-samples/flooop.png",
-    "policy_uri": "https://www.policy_uri.com",
     "integration_environment": "development",
     "protocol": "oidc",
     "country": "GR",
@@ -343,7 +337,6 @@ const postServices = [
     "service_description": "Sample description",
     "metadata_url": "https://asdfasdf.com",
     "logo_uri": "https://www.freelogodesign.org/Content/img/logo-samples/flooop.png",
-    "policy_uri": "https://www.policy_uri.com",
     "integration_environment": "development",
     "protocol": "saml",
     "contacts": null,
@@ -383,7 +376,6 @@ const validationRequests = {
    redirect_uris: "string",
    post_logout_redirect_uris: "string",
    logo_uri:"http://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
-   policy_uri:"http://policyuri.com",
    integration_environment:1,
    protocol:"oidc",
    country:"gr",
@@ -420,7 +412,6 @@ const validationRequests = {
    redirect_uris: ["string","string"],
    post_logout_redirect_uris: ["string","string"],
    logo_uri:"string",
-   policy_uri:"string",
    integration_environment:"string",
    protocol:"oidc",
    country:"gr",
@@ -457,7 +448,6 @@ const validationRequests = {
    redirect_uris:null,
    post_logout_redirect_uris:null,
    logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
-   policy_uri:"https://policyuriedit.com",
    integration_environment:"development",
    protocol:"saml",
    contacts:[{
@@ -492,7 +482,6 @@ const validationRequests = {
    redirect_uris:null,
    post_logout_redirect_uris:null,
    logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
-   policy_uri:"https://policyuriedit.com",
    integration_environment:"development",
    protocol:"saml",
    contacts:[{
@@ -583,7 +572,6 @@ const validationResponses = {
       { '[0].service_name': 'Service name missing' },
       { '[0].country': 'Country code missing' },
       { '[0].service_description': 'Service Description missing' },
-      { '[0].policy_uri': 'Service Policy Uri missing' },
       { '[0].contacts': 'Service Contacts missing' },
       { '[0].protocol': 'Protocol missing' },
       { '[0].integration_environment': 'Integration Environment missing' }
@@ -592,7 +580,6 @@ const validationResponses = {
      { '[0].service_name': 'Service name missing' },
      { '[0].country': 'Country code missing' },
      { '[0].service_description': 'Service Description missing' },
-     { '[0].policy_uri': 'Service Policy Uri missing' },
      { '[0].contacts': 'Service Contacts missing' },
      { '[0].redirect_uris': 'Service redirect_uri missing' },
      { '[0].post_logout_redirect_uris': 'Service post_logout_redirect_uris missing' },
@@ -609,7 +596,6 @@ const validationResponses = {
      { '[0].service_name': 'Service name missing' },
      { '[0].country': 'Country code missing' },
      { '[0].service_description': 'Service Description missing' },
-     { '[0].policy_uri': 'Service Policy Uri missing' },
      { '[0].contacts': 'Service Contacts missing' },
      { '[0].integration_environment': 'Integration Environment missing' },
      { '[0].entity_id': 'Entity id mising' },
@@ -643,7 +629,6 @@ const validationResponses = {
    ],
    oidc_values: [
      { '[0].logo_uri': 'Service Logo must be a url' },
-     { '[0].policy_uri': 'Service Policy Uri must be a url' },
      { '[0].contacts': 'Invalid contact' },
      { '[0].client_id': 'client_id must be between 4 and 36 characters' },
      {'[0].redirect_uris': 'Error: Invalid redirect url (string), it must be a url starting with http(s):// at position [0]'},

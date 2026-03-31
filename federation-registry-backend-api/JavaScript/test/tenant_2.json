@@ -86,9 +86,6 @@
         "contacts": {
           "description": "List of contacts for administrators of this service. (Technical and Support Contacts will be shown in the Consent Page)"
         },
-        "policy_uri": {
-          "description": "URL for the Policy Statement of this service, will be displayed to the user. (This information will be shown in the Consent Page)"
-        },
         "service_name": {
           "description": "Human-readable application name. (This information will be shown in the Consent Page)"
         },
@@ -139,7 +136,6 @@
         "redirect_uris": [],
         "post_logout_redirect_uris": [],
         "logo_uri":"",
-        "policy_uri":"",
         "integration_environment":"development",
         "protocol":"",
         "contacts":[],

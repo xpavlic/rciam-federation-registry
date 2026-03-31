@@ -51,8 +51,6 @@
       "token_endpoint_auth_signing_alg":["HS256","HS384","HS512","RS256","RS384","RS512","PS256"],
       "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"],
       "more_info":{
-          "description": "Website URL for information about the service (This information will be shown in the Consent Page)"
-        },
         "service_description": {
           "description" : "Human-readable text description, plain text format (max 255 characters) (This information will be shown in the Consent Page)"
         },
@@ -67,9 +65,6 @@
         },
         "contacts": {
           "description": "List of contacts for administrators of this service. (Technical and Support Contacts will be shown in the Consent Page)"
-        },
-        "policy_uri": {
-          "description": "URL for the Policy Statement of this service, will be displayed to the user. (This information will be shown in the Consent Page)"
         },
         "service_name": {
           "description": "Human-readable application name. (This information will be shown in the Consent Page)"

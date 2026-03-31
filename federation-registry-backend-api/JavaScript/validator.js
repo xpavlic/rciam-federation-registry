@@ -369,10 +369,6 @@ const serviceValidationRules = (options,req) => {
       body('*.service_description').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_description')}).withMessage('Service Description missing').if((value)=> {return value}).isString().withMessage('Service Description must be a string').isLength({min:1, max:255}).withMessage("Service description must be between 1 and 255 characters"),
       body('*.service_description_czech').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_description_czech')}).withMessage('Service Description (Czech) missing').if((value)=> {return value}).isString().withMessage('Service Description (Czech) must be a string').isLength({min:1, max:255}).withMessage("Service description (Czech) must be between 1 and 255 characters"),
       body('*.logo_uri').optional({checkFalsy:true}).isString().withMessage('Service Logo must be a string').custom((value)=> value.match(reg.regUrl)).withMessage('Service Logo must be a secure url https://').isLength({max:256}).withMessage("Service logo cant exceed character limit (6000)"),
-      body('*.policy_uri').custom((value,{req,location,path})=>{
-        let pos = path.match(/\[(.*?)\]/)[1];
-        let tenant = options.tenant_param?req.params.tenant:req.body[pos].tenant;
-        return requiredIntegrationEnvironment(tenant,value,req.body[pos].integration_environment,req,pos,'policy_uri')}).withMessage('Service Policy Uri missing').if((value)=> {return value}).isString().withMessage('Service Policy Uri must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Service Policy Uri must be a url'),
       body('*.requested_attributes').if((value)=> {
         return value&&(Array.isArray(value)&&value.length!==0)
       }).isArray().withMessage('Required attributes must be an array').custom((attributes,{req,location,path})=> {

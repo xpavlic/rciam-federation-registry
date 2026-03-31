@@ -1990,10 +1990,6 @@ definitions:
         type: "string"
         format: "uri"
         description: "URL that points to an image"
-      policy_uri:
-        type: "string"
-        format: "uri"
-        description: "URL for the Policy Statement of this service"
       integration_environment:
         type: "string"
         enum:
@@ -2261,10 +2257,6 @@ definitions:
         type: "string"
         format: "uri"
         description: "URL that points to an image"
-      policy_uri:
-        type: "string"
-        format: "uri"
-        description: "URL for the Policy Statement of this service"
       aup_uri:
         type: "string"
         format: "uri"

@@ -5,7 +5,7 @@ SELECT (
         'service_description', sd.service_description,
         'service_description_czech', sd.service_description_czech,
         'logo_uri', sd.logo_uri,
-        'policy_uri', sd.policy_uri,
+        
         'integration_environment', sd.integration_environment,
         'client_id', sd.client_id,
         'allow_introspection', sd.allow_introspection,
