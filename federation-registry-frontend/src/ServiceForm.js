@@ -29,7 +29,7 @@ import * as yup from 'yup';
 import { useTranslation } from 'react-i18next';
 import parse from 'html-react-parser';
 import countryData from 'country-region-data';
-import {SimpleInput,CountrySelect,SelectEnvironment,DeviceCode,Select,ListInput,LogoInput,TextAria,CheckboxList,SimpleCheckbox,TimeInput,Contacts,ServicePolicies,OrganizationField,SimpleRadio,MetadataInput, Checkbox} from './Components/Inputs.js'// eslint-disable-next-line
+import {SimpleInput,CountrySelect,SelectEnvironment,DeviceCode,Select,ListInput,LogoInput,TextAria,CheckboxList,SimpleCheckbox,TimeInput,Contacts,ServicePolicies,OrganizationField,SimpleRadio,MetadataInput} from './Components/Inputs.js'// eslint-disable-next-line
 import AccessControlTab from './Components/AccessControlTab';
 import ManagersTab from './Components/ManagersTab';
 import MoveDialog from "./Components/MoveDialog";
