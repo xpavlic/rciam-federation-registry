@@ -80,8 +80,6 @@ const ServiceTable = ({services}) => {
           accessor: 'service_name', // accessor is the "key" in the data
           Cell: props => {
             return (
-              props.row.original.website_url?
-              <span className="home-table-service-name"><a target="_blank" rel="noreferrer" href={props.row.original.website_url}>{props.value}</a></span>:
               <span className="home-table-service-name">{props.value}</span>
             )
           }

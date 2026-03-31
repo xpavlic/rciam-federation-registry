@@ -3,7 +3,6 @@
     "logo_url":"https://aai.tenant_2.eu/proxy/module.php/themevanilla/resources/images/logo.jpg",
     "sender":"tenant_2-Europe Federation Registry Notifications",
     "contact": "mailto:aai-support@tenant_2.eu",
-    "website_url": "https://tenant_2.eu/",
     "tenant_signature": "tenant_2-Europe Login team",
     "production_url": "https://aai.tenant_2.eu/federation/tenant_2",
     "home_page_description": "The tenant_2-Europe Federation Registry provides a secure web interface through which service operators can register their OpenID Connect and SAML based services.",
@@ -73,7 +72,6 @@
         "country": {
             "required": []
         },
-        "website_url": {
           "description": "Website URL for information about the service (This information will be shown in the Consent Page)"
         },
         "service_description": {
@@ -138,7 +136,6 @@
       "defaultValues":{
         "service_name":"",
         "service_description":"",
-        "website_url": "",
         "redirect_uris": [],
         "post_logout_redirect_uris": [],
         "logo_uri":"",

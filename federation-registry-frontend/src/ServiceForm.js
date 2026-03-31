@@ -459,7 +459,6 @@ const ServiceForm = (props)=> {
       then: yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
       otherwise: yup.string().nullable().matches(reg.regSimpleUrl,t('yup_url'))
       }),
-    website_url:yup.string().nullable().matches(reg.regSimpleUrl,t('yup_url')),
     service_login_url:yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
     service_login_url_czech:yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
     client_id:yup.string().nullable().when('protocol',{
@@ -1553,19 +1552,6 @@ const ServiceForm = (props)=> {
                           changed={props.changes?props.changes.logo_uri:null}
                         />
                       </InputRow>
-                      <InputRow moreInfo={tenant.form_config.more_info.website_url} title={t('form_website_url')} description={t('form_website_url_desc')} error={errors.website_url} touched={touched.website_url}>
-                        <SimpleInput
-                          name='website_url'
-                          placeholder={t('form_url_placeholder')}
-                          onChange={handleChange}
-                          value={values.website_url}
-                          isInvalid={hasSubmitted?!!errors.website_url:(!!errors.website_url&&touched.website_url)}
-                          onBlur={handleBlur}
-                          disabled={disabled}
-                          changed={props.changes?props.changes.website_url:null}
-                        />
-                        <UrlWarning url={values.website_url} touched={hasSubmitted||touched.website_url}/> 
-                     </InputRow>
 
                       <InputRow hide={!tenant?.form_config?.more_info?.country?.enabled} moreInfo={tenant.form_config.more_info.country.description} title={t('form_jurisdiction_service_title')} required={tenant?.form_config?.more_info?.country?.required.includes(values.integration_environment) && tenant.form_config.more_info.country.enabled} extraClass='select-col' error={errors.country} touched={touched.country}>
                         <CountrySelect
@@ -1731,10 +1717,6 @@ const ServiceForm = (props)=> {
                         error={errors.rp_accepted_tos} 
                         touched={touched.rp_accepted_tos}
                       >
-                        <div className='text-muted text-left mb-2'>
-                          {t('form_terms_of_use_desc', 'By marking the checkbox, you confirm that you recognise and comply with the Terms of Use for Service Providers.')}
-                        </div>
-
                         <SimpleCheckbox
                           name='rp_accepted_tos'
                           label={
@@ -1771,6 +1753,10 @@ const ServiceForm = (props)=> {
                           disabled={disabled}
                           changed={props.changes ? props.changes.rp_accepted_tos : null}
                         /> 
+
+                        <div className='text-muted text-left mb-2'>
+                          {t('form_terms_of_use_desc', 'By marking the checkbox, you confirm that you recognise and comply with the Terms of Use for Service Providers.')}
+                        </div>
                       </InputRow>
 
                       {Object.entries(tenant.form_config.extra_fields).map(([name,field_data])=>{

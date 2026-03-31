@@ -16,7 +16,6 @@ const create = {
      post_logout_redirect_uris: ["https://test.com"],
      logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
      policy_uri:"https://policyuri.com",
-     website_url:"",
      integration_environment:"development",
      protocol:"oidc",
      contacts:[ {
@@ -85,7 +84,6 @@ const create = {
      post_logout_redirect_uris:null,
      logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
      policy_uri:"https://policyuri.com",
-     website_url:"",
      integration_environment:"development",
      protocol:"saml",
      country:"gr",
@@ -145,7 +143,6 @@ const edit = {
    ],
    "logo_uri":"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
    "policy_uri":"https://policyuriedit.com",
-   "website_url":"",
    "integration_environment":"development",
    "protocol":"oidc",
    "contacts":[{
@@ -213,7 +210,6 @@ const edit = {
    post_logout_redirect_uris:null,
    logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
    policy_uri:"https://policyuriedit.com",
-   website_url:"",
    integration_environment:"development",
    protocol:"saml",
    contacts:[{
@@ -256,7 +252,6 @@ const edit = {
 const postServices = [
   {
     "policy_uri": "https://www.policy_uri.com",
-    "website_url":"",
     "integration_environment": "development",
     "protocol": "oidc",
     "client_id": "clqweient1",
@@ -314,7 +309,6 @@ const postServices = [
     "service_description": "Sample description",
     "logo_uri": "https://www.freelogodesign.org/Content/img/logo-samples/flooop.png",
     "policy_uri": "https://www.policy_uri.com",
-    "website_url":"",
     "integration_environment": "development",
     "protocol": "oidc",
     "country": "GR",
@@ -350,7 +344,6 @@ const postServices = [
     "metadata_url": "https://asdfasdf.com",
     "logo_uri": "https://www.freelogodesign.org/Content/img/logo-samples/flooop.png",
     "policy_uri": "https://www.policy_uri.com",
-    "website_url":"",
     "integration_environment": "development",
     "protocol": "saml",
     "contacts": null,
@@ -391,7 +384,6 @@ const validationRequests = {
    post_logout_redirect_uris: "string",
    logo_uri:"http://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
    policy_uri:"http://policyuri.com",
-   website_url:"",
    integration_environment:1,
    protocol:"oidc",
    country:"gr",
@@ -429,7 +421,6 @@ const validationRequests = {
    post_logout_redirect_uris: ["string","string"],
    logo_uri:"string",
    policy_uri:"string",
-   website_url:"",
    integration_environment:"string",
    protocol:"oidc",
    country:"gr",
@@ -467,7 +458,6 @@ const validationRequests = {
    post_logout_redirect_uris:null,
    logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
    policy_uri:"https://policyuriedit.com",
-   website_url:"",
    integration_environment:"development",
    protocol:"saml",
    contacts:[{
@@ -503,7 +493,6 @@ const validationRequests = {
    post_logout_redirect_uris:null,
    logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
    policy_uri:"https://policyuriedit.com",
-   website_url:"",
    integration_environment:"development",
    protocol:"saml",
    contacts:[{

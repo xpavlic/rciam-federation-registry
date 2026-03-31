@@ -32,7 +32,6 @@ class ServicePetitionDetailsRepository {
         group_id:body.group_id,
         organization_id: body.organization_id,
         aup_uri:body.aup_uri,
-        website_url:body.website_url,
         check_group_membership:body.check_group_membership,
         require_vo_membership:body.require_vo_membership,
         rp_ensure_membership_desc:body.rp_ensure_membership_desc,
@@ -65,7 +64,6 @@ class ServicePetitionDetailsRepository {
           id:id,
           type:body.type,
           protocol:body.protocol,
-          website_url:body.website_url,
           check_group_membership:body.check_group_membership,
           require_vo_membership:body.require_vo_membership,
           rp_ensure_membership_desc:body.rp_ensure_membership_desc,
@@ -223,7 +221,7 @@ function createColumnsets(pgp) {
         const table = new pgp.helpers.TableName({table: 'service_petition_details', schema: 'public'});
 
         cs.insert = new pgp.helpers.ColumnSet(['service_description','service_description_czech','service_name','service_name_czech','country',
-          'service_login_url','service_login_url_czech','logo_uri','policy_uri','integration_environment','requester','protocol','comment','website_url'],
+          'service_login_url','service_login_url_czech','logo_uri','policy_uri','integration_environment','requester','protocol','comment'],
           {table});
         cs.update = cs.insert.extend(['?id','state','type','reviewed_at','reviewer','service_id']);
     }

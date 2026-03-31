@@ -2109,9 +2109,6 @@ definitions:
       country:
         type: "string"
         description: "Country of the service"
-      website_url:
-        type: "string"
-        description: "Website Url containing information about the service"
       redirect_uris:
         type: "array"
         items:
@@ -2390,9 +2387,6 @@ definitions:
       country:
         type: "string"
         description: "Country of the organisation of the service"
-      website_url:
-        type: "string"
-        description: "Website Url containing information about the service"
       redirect_uris:
         type: "array"
         items:
@@ -2484,9 +2478,6 @@ definitions:
             country:
               type: string
               description: "The country of the service"
-            website_url:
-              type: "string"
-              description: "Website Url containing information about the service"
             notification:
               type: "boolean"
               description: "True if there is a nitification for the service"

@@ -19,7 +19,7 @@ SELECT (
         'jwks', sd.jwks,
         'jwks_uri', sd.jwks_uri,
         'country', sd.country,
-        'website_url', sd.website_url,
+        
         'service_login_url', sd.service_login_url,
         'service_login_url_czech', sd.service_login_url_czech,
         'token_endpoint_auth_method', sd.token_endpoint_auth_method,

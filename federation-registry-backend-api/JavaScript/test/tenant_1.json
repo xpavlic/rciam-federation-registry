@@ -3,7 +3,6 @@
     "logo_url":"https://aai-dev.tenant_1.eu/proxy/module.php/themeegi/resources/images/logo.svg",
     "sender":"tenant_1 Check-in",
     "contact":"check-in@tenant_1.eu",
-    "website_url": "https://www.tenant_1.eu/",
     "tenant_signature": "tenant_1 AAI team",
     "production_url": "https://aai.tenant_1.eu/federation/tenant_1",
     "home_page_description": "The tenant_1 CheckIn Service provides a secure web interface through which service operators can register their OpenID Connect and SAML based services.",
@@ -81,7 +80,6 @@
             "country": {
                 "required": ["demo","production"]
             },
-            "website_url": {
             "description": "Website URL for information about the service (This information will be shown in the Consent Page)"
             },
             "service_description": {
@@ -177,7 +175,6 @@
         "defaultValues":{
             "service_name":"",
             "service_description":"",
-            "website_url": "",
             "redirect_uris": [],
             "post_logout_redirect_uris": [],
             "logo_uri":"",
