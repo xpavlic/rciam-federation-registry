@@ -1272,8 +1272,6 @@ const ServiceForm = (props)=> {
     [tenant]
   );
 
-  const infrastructureOptionsMemo = infrastructureOptions;
-
   return(
     <React.Fragment>
     <Logout logout={logout}/>
