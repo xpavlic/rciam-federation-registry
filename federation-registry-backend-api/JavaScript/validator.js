@@ -343,8 +343,8 @@ const serviceValidationRules = (options,req) => {
     return [
       body().isArray({min:1}).withMessage('Body must be an array containing at least one service'),
       body('*.tenant').custom((value,{req,location,path})=>{if(options.tenant_param||req.body[path.match(/\[(.*?)\]/)[1]].tenant in tenant_config){return true}else{return false}}).withMessage('Invalid Tenant'),
-      body('*.service_name').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_name')}).withMessage('Service name missing').if((value,{req,location,path})=> { return value}).isString().withMessage('Service name must be a string').isLength({min:4, max:55}).withMessage('Service name must be from 2 up to 55 characters'),
-      body('*.service_name_czech').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_name_czech')}).withMessage('Service name (Czech) missing').if((value)=> {return value}).isString().withMessage('Service name (Czech) must be a string').isLength({min:4, max:55}).withMessage('Service name (Czech) must be from 2 up to 55 characters'),
+      body('*.service_name').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_name')}).withMessage('Service name missing').if((value,{req,location,path})=> { return value}).isString().withMessage('Service name must be a string').isLength({min:4, max:55}).withMessage('Service name must be from 4 up to 55 characters'),
+      body('*.service_name_czech').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_name_czech')}).withMessage('Service name (Czech) missing').if((value)=> {return value}).isString().withMessage('Service name (Czech) must be a string').isLength({min:4, max:55}).withMessage('Service name (Czech) must be from 4 up to 55 characters'),
       body('*.country').custom((value,{req,location,path})=>{
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let integration_environment = req.body[path.match(/\[(.*?)\]/)[1]].integration_environment;
