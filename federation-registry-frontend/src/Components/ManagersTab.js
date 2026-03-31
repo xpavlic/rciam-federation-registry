@@ -54,7 +54,7 @@ const ManagersTab = ({ tenantName, serviceId, serviceName, groupId, disabled }) 
         )
       );
 
-      const success = responses.every((response) => response.status === 200);
+      const success = responses.every((response) => response.ok);
       setResult({ success, sent: emails.length });
       if (success) {
         setEmails([]);
@@ -113,8 +113,10 @@ const ManagersTab = ({ tenantName, serviceId, serviceName, groupId, disabled }) 
                   className='btn btn-sm btn-light'
                   onClick={() => removeEmail(email)}
                   style={{ lineHeight: 1, padding: '2px 6px' }}
+                  aria-label='Remove email'
                 >
-                  x
+                  <span aria-hidden='true'>x</span>
+                  <span className='visually-hidden'>Remove email</span>
                 </button>
               </span>
             ))}

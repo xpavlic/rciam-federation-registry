@@ -174,7 +174,7 @@ const ServiceForm = (props)=> {
     return first.every((value,index)=>value === second[index]);
   };
 
-  useEffect(()=>{
+ useEffect(()=>{
     //Get tags 
     if(props.user.actions.includes('manage_tags')&&service_id){
       getTags();
@@ -185,12 +185,14 @@ const ServiceForm = (props)=> {
       setShowInitErrors(true)
     }
 
-    if(!tenant.form_config.integration_environment.includes(props.initialValues.integration_environment)){
-      props.initialValues.integration_environment = tenant.form_config.integration_environment[0];
+    const nextInitial = { ...props.initialValues };
+
+    if(!tenant.form_config.integration_environment.includes(nextInitial.integration_environment)){
+      nextInitial.integration_environment = tenant.form_config.integration_environment[0];
     }
 
     if (props.move_service && props.integration_environment) {
-      props.initialValues.integration_environment = props.integration_environment;
+      nextInitial.integration_environment = props.integration_environment;
     }
 
     countryData.forEach((item,index)=>{
@@ -202,105 +204,105 @@ const ServiceForm = (props)=> {
     }
     let extra_fields =tenant.form_config.extra_fields;
     Object.keys(extra_fields).forEach((name,index)=>{
-      if(!Object.keys(props.initialValues).includes(name)){
-        props.initialValues[name]= extra_fields[name].default;
+      if(!Object.keys(nextInitial).includes(name)){
+        nextInitial[name]= extra_fields[name].default;
       }
     });
 
     // Check restrictions for review
     if(props.review){
-      if(tenant.restricted_environments.includes(props.initialValues.integration_environment)&&!props.user.actions.includes('review_restricted')){
+      if(tenant.restricted_environments.includes(nextInitial.integration_environment)&&!props.user.actions.includes('review_restricted')){
         setRestrictReview(true);
       }
     }
-    if(props.initialValues.organization_name){
+    if(nextInitial.organization_name){
       setDisabledOrganizationFields(['organization_url']);
     }
 
-    if(!Array.isArray(props.initialValues.rp_blocked_idps_desc)){
-      props.initialValues.rp_blocked_idps_desc = [];
+    if(!Array.isArray(nextInitial.rp_blocked_idps_desc)){
+      nextInitial.rp_blocked_idps_desc = [];
     }
-    if(!Array.isArray(props.initialValues.rp_only_allowed_idps_desc)){
-      props.initialValues.rp_only_allowed_idps_desc = [];
+    if(!Array.isArray(nextInitial.rp_only_allowed_idps_desc)){
+      nextInitial.rp_only_allowed_idps_desc = [];
     }
-    if(typeof(props.initialValues.check_group_membership) !== 'boolean'){
-      props.initialValues.check_group_membership = false;
+    if(typeof(nextInitial.check_group_membership) !== 'boolean'){
+      nextInitial.check_group_membership = false;
     }
-    if(typeof(props.initialValues.require_vo_membership) !== 'boolean'){
-      props.initialValues.require_vo_membership = false;
+    if(typeof(nextInitial.require_vo_membership) !== 'boolean'){
+      nextInitial.require_vo_membership = false;
     }
-    if(typeof(props.initialValues.require_group_membership) !== 'boolean'){
-      props.initialValues.require_group_membership = false;
+    if(typeof(nextInitial.require_group_membership) !== 'boolean'){
+      nextInitial.require_group_membership = false;
     }
-    if(typeof(props.initialValues.create_group) !== 'boolean'){
-      props.initialValues.create_group = false;
+    if(typeof(nextInitial.create_group) !== 'boolean'){
+      nextInitial.create_group = false;
     }
-    if(typeof(props.initialValues.allow_registration) !== 'boolean'){
-      props.initialValues.allow_registration = false;
+    if(typeof(nextInitial.allow_registration) !== 'boolean'){
+      nextInitial.allow_registration = false;
     }
-    if(typeof(props.initialValues.dynamic_registration) !== 'boolean'){
-      props.initialValues.dynamic_registration = false;
+    if(typeof(nextInitial.dynamic_registration) !== 'boolean'){
+      nextInitial.dynamic_registration = false;
     }
-    if(!props.initialValues.rp_ensure_membership_desc){
-      props.initialValues.rp_ensure_membership_desc = '';
+    if(!nextInitial.rp_ensure_membership_desc){
+      nextInitial.rp_ensure_membership_desc = '';
     }
-    if(!props.initialValues.rp_ensure_group_membership_desc){
-      props.initialValues.rp_ensure_group_membership_desc = '';
+    if(!nextInitial.rp_ensure_group_membership_desc){
+      nextInitial.rp_ensure_group_membership_desc = '';
     }
-    if(!props.initialValues.registration_url){
-      props.initialValues.registration_url = '';
+    if(!nextInitial.registration_url){
+      nextInitial.registration_url = '';
     }
 
-    const splitPolicies = splitPolicyValuesForForm(props.initialValues.service_policies);
-    props.initialValues.service_policies = splitPolicies.service_policies;
-    if(Array.isArray(props.initialValues.service_policies_czech) && props.initialValues.service_policies_czech.length > 0){
-      props.initialValues.service_policies_czech = normalizePolicyValues(props.initialValues.service_policies_czech)
+    const splitPolicies = splitPolicyValuesForForm(nextInitial.service_policies);
+    nextInitial.service_policies = splitPolicies.service_policies;
+    if(Array.isArray(nextInitial.service_policies_czech) && nextInitial.service_policies_czech.length > 0){
+      nextInitial.service_policies_czech = normalizePolicyValues(nextInitial.service_policies_czech)
         .map((item)=>({name: item.name, url: item.url}));
     }
     else{
-      props.initialValues.service_policies_czech = splitPolicies.service_policies_czech;
+      nextInitial.service_policies_czech = splitPolicies.service_policies_czech;
     }
 
-    if(props.initialValues.protocol === 'oidc'){
-      if(!Array.isArray(props.initialValues.resource_indicators)){
-        props.initialValues.resource_indicators = [];
+    if(nextInitial.protocol === 'oidc'){
+      if(!Array.isArray(nextInitial.resource_indicators)){
+        nextInitial.resource_indicators = [];
       }
-      if(!Array.isArray(props.initialValues.grant_types)){
-        props.initialValues.grant_types = [];
+      if(!Array.isArray(nextInitial.grant_types)){
+        nextInitial.grant_types = [];
       }
-      props.initialValues.grant_types = props.initialValues.grant_types.filter((grantType)=>oidcGrantTypeOptions.includes(grantType));
-      if(!oidcTokenEndpointMethodOptions.includes(props.initialValues.token_endpoint_auth_method)){
-        props.initialValues.token_endpoint_auth_method = 'client_secret_basic';
+      nextInitial.grant_types = nextInitial.grant_types.filter((grantType)=>oidcGrantTypeOptions.includes(grantType));
+      if(!oidcTokenEndpointMethodOptions.includes(nextInitial.token_endpoint_auth_method)){
+        nextInitial.token_endpoint_auth_method = 'client_secret_basic';
       }
-      if(!oidcPkceOptions.includes(props.initialValues.code_challenge_method || '')){
-        props.initialValues.code_challenge_method = '';
+      if(!oidcPkceOptions.includes(nextInitial.code_challenge_method || '')){
+        nextInitial.code_challenge_method = '';
       }
-      if(!Array.isArray(props.initialValues.scope)){
-        props.initialValues.scope = [];
+      if(!Array.isArray(nextInitial.scope)){
+        nextInitial.scope = [];
       }
-      if(!(service_id||petition_id) && props.initialValues.scope.length === 0){
-        props.initialValues.scope = oidcScopeOptions.filter((scopeItem)=>oidcDefaultScopes.includes(scopeItem));
+      if(!(service_id||petition_id) && nextInitial.scope.length === 0){
+        nextInitial.scope = oidcScopeOptions.filter((scopeItem)=>oidcDefaultScopes.includes(scopeItem));
       }
     }
 
-    if(props.initialValues.protocol === 'saml'){
+    if(nextInitial.protocol === 'saml'){
       const samlUiConfig = tenant?.form_config?.saml_ui || {};
       const defaultSamlAttributes = samlUiConfig.default_attributes || ['openid', 'profile', 'email'];
-      if(!Array.isArray(props.initialValues.required_attributes)){
-        props.initialValues.required_attributes = [...defaultSamlAttributes];
+      if(!Array.isArray(nextInitial.required_attributes)){
+        nextInitial.required_attributes = [...defaultSamlAttributes];
       }
-      if(typeof props.initialValues.assertion_consumer_service !== 'string'){
-        props.initialValues.assertion_consumer_service = '';
+      if(typeof nextInitial.assertion_consumer_service !== 'string'){
+        nextInitial.assertion_consumer_service = '';
       }
-      if(typeof props.initialValues.single_logout_service !== 'string'){
-        props.initialValues.single_logout_service = '';
+      if(typeof nextInitial.single_logout_service !== 'string'){
+        nextInitial.single_logout_service = '';
       }
-      if(typeof props.initialValues.signing_cert !== 'string'){
-        props.initialValues.signing_cert = '';
+      if(typeof nextInitial.signing_cert !== 'string'){
+        nextInitial.signing_cert = '';
       }
     }
 
-    setFormValues(props.initialValues);
+    setFormValues(nextInitial);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[props.initialValues]);
 
@@ -1215,8 +1217,7 @@ const ServiceForm = (props)=> {
     data = generateValues(data);
     data.service_policies = mergePolicyValuesForApi(data.service_policies, data.service_policies_czech);
     delete data.service_policies_czech;
-    // Ensure new fields are always present (even if empty) to pass backend validation
-    if (!Array.isArray(data.service_policies)) data.service_policies = [];
+    // Ensure optional fields are initialized with default empty values to satisfy backend type expectations
     if (!data.hasOwnProperty('infrastructures')) data.infrastructures = [];
     if (!data.hasOwnProperty('service_login_url')) data.service_login_url = '';
     if (!data.hasOwnProperty('service_login_url_czech')) data.service_login_url_czech = '';
@@ -1630,18 +1631,6 @@ const ServiceForm = (props)=> {
                     </div>
                   </InputRow>
 
-                      <InputRow hide={!tenant?.form_config?.more_info?.country?.enabled} moreInfo={tenant.form_config.more_info.country.description} title={'Jurisdiction of the Service'} required={tenant?.form_config?.more_info?.country?.required.includes(values.integration_environment) && tenant.form_config.more_info.country.enabled} extraClass='select-col' error={errors.country} touched={touched.country}>
-                        <CountrySelect
-                          onBlur={handleBlur}
-                          placeholder={'Select country'}
-                          name="country"
-                          values={values}
-                          isInvalid={hasSubmitted?!!errors.country:(!!errors.country&&touched.country)}
-                          onChange={handleChange}
-                          disabled={disabled}
-                          changed={props.changes?props.changes.country:null}
-                        />
-                      </InputRow>
                       {tenant.form_config.extra_fields.organization&&!tenant?.form_config?.extra_fields?.organization?.hide.includes(values.integration_environment)?
                       <React.Fragment>
                         <InputRow  moreInfo={tenant.form_config.more_info.organization_name} required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} title={t('form_organization_title')} description={t('form_organization_desc')} error={errors.organization_name} touched={touched.organization_name}>

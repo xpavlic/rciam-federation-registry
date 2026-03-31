@@ -633,7 +633,7 @@ const serviceValidationRules = (options,req) => {
           throw new Error('Service resource_indicators must be an array');
         }
         value.forEach((item)=>{
-          if(!item || !item.match(reg.regSimpleUrl)){
+          if(!item || typeof item !== 'string' || !item.match(reg.regSimpleUrl)){
             throw new Error('Resource indicator must be a valid url');
           }
         });

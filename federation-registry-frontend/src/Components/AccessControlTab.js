@@ -31,8 +31,10 @@ const IdpRestrictionList = ({ title, values, onRemove, disabled }) => {
               onClick={() => onRemove(index)}
               style={{ lineHeight: 1, padding: '2px 6px' }}
               disabled={disabled}
+              aria-label="Remove IdP restriction"
             >
-              x
+              <span aria-hidden="true">x</span>
+              <span className="visually-hidden">Remove IdP restriction</span>
             </button>
           </span>
         ))}
