@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import InputRow from './InputRow';
 import { SimpleInput, SimpleCheckbox } from './Inputs';
 
-const IdpRestrictionList = ({ title, values, onRemove }) => {
+const IdpRestrictionList = ({ title, values, onRemove, disabled }) => {
   if (!Array.isArray(values) || values.length === 0) {
     return null;
   }
@@ -30,6 +30,7 @@ const IdpRestrictionList = ({ title, values, onRemove }) => {
               className="btn btn-sm btn-light"
               onClick={() => onRemove(index)}
               style={{ lineHeight: 1, padding: '2px 6px' }}
+              disabled={disabled}
             >
               x
             </button>
@@ -112,11 +113,13 @@ const AccessControlTab = ({ values, errors, touched, setFieldValue, handleChange
           title={t('access_control_blocked_idps')}
           values={values.rp_blocked_idps_desc}
           onRemove={(index) => removeIdpRestriction('rp_blocked_idps_desc', index)}
+          disabled={disabled}
         />
         <IdpRestrictionList
           title={t('access_control_allowed_idps')}
           values={values.rp_only_allowed_idps_desc}
           onRemove={(index) => removeIdpRestriction('rp_only_allowed_idps_desc', index)}
+          disabled={disabled}
         />
       </InputRow>
 
@@ -141,7 +144,7 @@ const AccessControlTab = ({ values, errors, touched, setFieldValue, handleChange
 
       {values.check_group_membership ? (
         <React.Fragment>
-          <InputRow title={t('access_control_vo_membership_title')} touched={touched.require_vo_membership} error={errors.rp_ensure_membership_desc}>
+          <InputRow title={t('access_control_vo_membership_title')} touched={touched.require_vo_membership || touched.rp_ensure_membership_desc} error={errors.rp_ensure_membership_desc}>
             <SimpleCheckbox
               name='require_vo_membership'
               label={t('access_control_vo_membership_label')}
@@ -165,7 +168,7 @@ const AccessControlTab = ({ values, errors, touched, setFieldValue, handleChange
             </Form.Text>
           </InputRow>
 
-          <InputRow title={t('access_control_group_membership_title')} touched={touched.require_group_membership} error={errors.rp_ensure_group_membership_desc}>
+          <InputRow title={t('access_control_group_membership_title')} touched={touched.require_group_membership || touched.rp_ensure_group_membership_desc} error={errors.rp_ensure_group_membership_desc}>
             <SimpleCheckbox
               name='require_group_membership'
               label={t('access_control_group_membership_label')}
@@ -226,7 +229,7 @@ const AccessControlTab = ({ values, errors, touched, setFieldValue, handleChange
         </React.Fragment>
       ) : null}
 
-      <InputRow title={t('access_control_registration_handling_title')} touched={touched.dynamic_registration} error={errors.registration_url}>
+      <InputRow title={t('access_control_registration_handling_title')} touched={touched.dynamic_registration || touched.registration_url} error={errors.registration_url}>
         <SimpleCheckbox
           name='dynamic_registration'
           label={t('access_control_delegate_to_aai')}
