@@ -354,13 +354,12 @@ const ServiceList= (props)=> {
 
   const createCsv = (exportedServices) => {
     var csv =
-      "Country,Organization,Service Name, Service Url, Service Managers, Integration Date, Last Update Date\n";
+      "Country,Organization,Service Name, Service Managers, Integration Date, Last Update Date\n";
       exportedServices.forEach((service,index) => {
       try{
         csv += '"' + (service.country?service.country:' ') + '",';
         csv += '"' + (service.organization_name?service.organization_name:' ') + '",';
         csv += '"' + (service.service_name?service.service_name:' ') + '",';
-        csv += '"' + (service.website_url?service.website_url:' ') + '",';
         csv += '"' + (Array.isArray(service.owners)?service.owners.join(" "):'Ownerless') + '",';
         csv += '"' + (service.created_at?service.created_at:' ') + '",';
         csv += '"' + (service.last_edited?service.last_edited:' ') + '",';

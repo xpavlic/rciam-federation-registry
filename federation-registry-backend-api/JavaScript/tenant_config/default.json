@@ -3,7 +3,6 @@
     "logo_url":"https://logo.jpg",
     "sender":"Federation Registry Notifications",
     "contact": "mailto:support",
-    "website_url": "https://wwebsite.com/",
     "tenant_signature": "Email Signature",
     "production_url": "https://production.url",
     "home_page_description": "The Federation Registry provides a secure web interface through which service operators can register their OpenID Connect and SAML based services.",
@@ -52,7 +51,6 @@
       "token_endpoint_auth_signing_alg":["HS256","HS384","HS512","RS256","RS384","RS512","PS256"],
       "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"],
       "more_info":{
-        "website_url": {
           "description": "Website URL for information about the service (This information will be shown in the Consent Page)"
         },
         "service_description": {

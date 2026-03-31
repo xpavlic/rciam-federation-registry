@@ -6,7 +6,7 @@ SELECT json_build_object('id',sd.id,'service_name', sd.service_name,'service_des
 						 'device_code_validity_seconds',sd.device_code_validity_seconds,'access_token_validity_seconds',sd.access_token_validity_seconds,
 						 'refresh_token_validity_seconds',sd.refresh_token_validity_seconds,'refresh_token_validity_seconds',sd.refresh_token_validity_seconds,
 						 'client_secret',sd.client_secret,'reuse_refresh_token',sd.reuse_refresh_token,'protocol',sd.protocol,'jwks',sd.jwks,'jwks_uri',sd.jwks_uri,
-						 'country',sd.country,'website_url',sd.website_url,'token_endpoint_auth_method',sd.token_endpoint_auth_method,'token_endpoint_auth_signing_alg',sd.token_endpoint_auth_signing_alg,
+						 'country',sd.country,'token_endpoint_auth_method',sd.token_endpoint_auth_method,'token_endpoint_auth_signing_alg',sd.token_endpoint_auth_signing_alg,
 						 'clear_access_tokens_on_refresh',sd.clear_access_tokens_on_refresh,'id_token_timeout_seconds',sd.id_token_timeout_seconds,'metadata_url',sd.metadata_url,
 						 'entity_id',sd.entity_id,'assertion_consumer_service',sd.assertion_consumer_service,'single_logout_service',sd.single_logout_service,'signing_cert',sd.signing_cert,
 						 'check_group_membership',sd.check_group_membership,'require_vo_membership',sd.require_vo_membership,'rp_ensure_membership_desc',sd.rp_ensure_membership_desc,

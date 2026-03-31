@@ -948,7 +948,6 @@ const serviceValidationRules = (options,req) => {
           return value;
         }
       }).optional({checkFalsy:true}).isString().withMessage('Must be a string').isLength({min:1, max:36}),
-      body('*.website_url').optional({checkFalsy:true}).isString().withMessage('Website Url must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Website Url must be a valid url'),
       body('*.service_login_url').optional({checkFalsy:true}).isString().withMessage('Service login url must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Service login url must be a valid url'),
       body('*.service_login_url_czech').optional({checkFalsy:true}).isString().withMessage('Service login url (Czech) must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Service login url (Czech) must be a valid url'),
       body('*.infrastructures').optional({checkFalsy:true}).custom((value,{req,location,path})=>{
