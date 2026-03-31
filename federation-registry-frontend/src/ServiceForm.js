@@ -655,7 +655,7 @@ const ServiceForm = (props)=> {
       then: yup.array().min(1, 'Select at least one infrastructure').of(yup.string()),
       otherwise: yup.array().nullable().of(yup.string())
     }),
-    service_policies:yup.array().nullable().of(policySchema).test('testPolicyTypesUnique','Policy type must be unique',function(value){
+    service_policies:yup.array().nullable().min(1,t('yup_required')).required(t('yup_required')).of(policySchema).test('testPolicyTypesUnique','Policy type must be unique',function(value){
       if(!value){
         return true;
       }
@@ -664,7 +664,7 @@ const ServiceForm = (props)=> {
     }).test('testPolicyTypesMatchCzech','Policy types must match in both language sections',function(value){
       return hasSamePolicyTypes(value, this.parent.service_policies_czech);
     }),
-    service_policies_czech:yup.array().nullable().of(policySchema).test('testPolicyTypesUniqueCzech','Policy type must be unique',function(value){
+    service_policies_czech:yup.array().nullable().min(1,t('yup_required')).required(t('yup_required')).of(policySchema).test('testPolicyTypesUniqueCzech','Policy type must be unique',function(value){
       if(!value){
         return true;
       }
