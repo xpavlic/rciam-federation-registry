@@ -100,6 +100,8 @@
     "button_cancel_request":"Cancel Request",
     "form_tab_general":"General",
     "form_tab_protocol":"Protocol Specific",
+    "form_tab_access_control":"Access Control",
+    "form_tab_managers":"Managers",
     "form_service_name":"Service name",
     "form_service_name_bilingual_error":"Both English and Czech names are required",
     "form_service_name_czech_placeholder":"Service name in Czech",

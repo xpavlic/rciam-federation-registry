@@ -2092,7 +2092,7 @@ const ServiceForm = (props)=> {
                        </React.Fragment>
                      :null}
                     </Tab>
-                    <Tab eventKey="access_control" title={'Access Control'}>
+                    <Tab eventKey="access_control" title={t('form_tab_access_control')}>
                       <AccessControlTab
                         values={values}
                         errors={errors}
@@ -2104,7 +2104,7 @@ const ServiceForm = (props)=> {
                         hasSubmitted={hasSubmitted}
                       />
                     </Tab>
-                    <Tab eventKey="managers" title={'Managers'}>
+                    <Tab eventKey="managers" title={t('form_tab_managers')}>
                       <ManagersTab
                         tenantName={tenant_name}
                         serviceId={service_id}
