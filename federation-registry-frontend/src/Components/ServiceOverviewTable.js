@@ -95,27 +95,32 @@ const ServiceTable = ({services}) => {
         },
         { 
           Header: "Policies",
-          accessor: 'policy_uri',
+          accessor: 'service_policies',
           disableFilters: true,
           disableSortBy: true,
           Cell: props => {
+            const hasPolicies = Array.isArray(props.value) && props.value.length > 0;
+            const hasAup = props.row.original.aup_uri !== null && props.row.original.aup_uri !== "";
             return (
               <React.Fragment>
-                {(props.value === null||props.value === "")&&(props.row.original.aup_uri === null||props.row.original.aup_uri === "")?
+                {!hasPolicies && !hasAup ?
                   <div style={{marginTop:"0.5rem"}}>
                     (not available)
                   </div>
                 :
                   <React.Fragment>
-                    <div style={{marginTop:"0.5rem"}}>
-                      {props.value === null||props.value === "" ?
-                        "Privacy Policy (not available)" 
-                      : 
-                        <a href={props.value} rel="noreferrer" target="_blank">Privacy Policy</a>
-                      }
-                    </div>
+                    {hasPolicies && props.value.map((policy, index) => (
+                      <div key={index} style={{marginTop:"0.5rem"}}>
+                        <a href={policy.url} rel="noreferrer" target="_blank">{policy.name}</a>
+                      </div>
+                    ))}
+                    {!hasPolicies && 
+                      <div style={{marginTop:"0.5rem"}}>
+                        Privacy Policy (not available)
+                      </div>
+                    }
                     <div style={{marginTop:"0.5rem",marginBottom:"0.5rem"}}>
-                      {props.row.original.aup_uri === null||props.row.original.aup_uri === "" ? 
+                      {!hasAup ? 
                         "Acceptable Use Policy (not available)"
                       :
                         <a href={props.row.original.aup_uri} rel="noreferrer" target="_blank">Acceptable Use Policy</a>

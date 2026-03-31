@@ -117,8 +117,6 @@
     "form_description_desc":"Human-readable text description, plain text format (max 255 characters)",
     "form_service_login_url":"Service login URL",
     "form_service_login_url_bilingual_error":"Provide valid URLs for both languages",
-    "form_policy_uri":"Link to Privacy Policy",
-    "form_policy_uri_desc":"URL for the Policy Statement of this service, will be displayed to the user",
     "form_jurisdiction_service_title":"Jurisdiction of the Service",
     "form_country_placeholder":"Select country",
     "form_infrastructures_title":"Infrastructures",

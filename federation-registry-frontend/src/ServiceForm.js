@@ -456,11 +456,6 @@ const ServiceForm = (props)=> {
     service_name:yup.string().nullable().min(4,t('yup_char_min') + ' ('+4+')').max(55,t('yup_char_max') + ' ('+55+')').required(t('yup_required')),
     service_name_czech:yup.string().nullable().min(4,t('yup_char_min') + ' ('+4+')').max(55,t('yup_char_max') + ' ('+55+')').required(t('yup_required')),
     // Every time client_id changes we make a fetch request to see if it is available.
-    policy_uri:yup.string().nullable().when('integration_environment',{
-      is:(integrationEnvironment)=> tenant.form_config.more_info.policy_uri?.required?.includes(integrationEnvironment),
-      then: yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
-      otherwise: yup.string().nullable().matches(reg.regSimpleUrl,t('yup_url'))
-      }),
     service_login_url:yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
     service_login_url_czech:yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
     client_id:yup.string().nullable().when('protocol',{

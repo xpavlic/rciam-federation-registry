@@ -24,7 +24,6 @@ class ServicePetitionDetailsRepository {
         service_name: body.service_name,
         service_name_czech: body.service_name_czech,
         logo_uri: body.logo_uri,
-        policy_uri: body.policy_uri,
         integration_environment: body.integration_environment,
         requester: sub,
         country: body.country,
@@ -59,7 +58,6 @@ class ServicePetitionDetailsRepository {
           service_name_czech: body.service_name_czech,
           logo_uri: body.logo_uri,
           country: body.country,
-          policy_uri: body.policy_uri,
           integration_environment:body.integration_environment,
           id:id,
           type:body.type,
@@ -221,7 +219,7 @@ function createColumnsets(pgp) {
         const table = new pgp.helpers.TableName({table: 'service_petition_details', schema: 'public'});
 
         cs.insert = new pgp.helpers.ColumnSet(['service_description','service_description_czech','service_name','service_name_czech','country',
-          'service_login_url','service_login_url_czech','logo_uri','policy_uri','integration_environment','requester','protocol','comment'],
+                      'service_login_url','service_login_url_czech','logo_uri','integration_environment','requester','protocol','comment'],
           {table});
         cs.update = cs.insert.extend(['?id','state','type','reviewed_at','reviewer','service_id']);
     }

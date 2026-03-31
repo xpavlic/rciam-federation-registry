@@ -1,5 +1,5 @@
 SELECT json_build_object('service_name', sd.service_name,'service_name_czech',sd.service_name_czech,'service_description',sd.service_description,'service_description_czech',sd.service_description_czech,
-						 'logo_uri',sd.logo_uri,'policy_uri',sd.policy_uri,'integration_environment',sd.integration_environment,
+						 'logo_uri',sd.logo_uri,'integration_environment',sd.integration_environment,
 						 'client_id',sd.client_id,'allow_introspection',sd.allow_introspection,'code_challenge_method',sd.code_challenge_method,
 						 'device_code_validity_seconds',sd.device_code_validity_seconds,'access_token_validity_seconds',sd.access_token_validity_seconds,
 						 'refresh_token_validity_seconds',sd.refresh_token_validity_seconds,'refresh_token_validity_seconds',sd.refresh_token_validity_seconds,
