@@ -297,7 +297,7 @@ router.get('/tenants/:tenant',(req,res,next)=>{
 
 
 // Get available tenants in the federation registry
-router.get('/tenants',(req,res,next)=> {
+router.get('/tenants', authenticate,(req,res,next) => {
   try{
     db.tenants.getInit().then(tenants => {
       if(tenants){
