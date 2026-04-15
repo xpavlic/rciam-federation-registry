@@ -194,7 +194,7 @@ app.use(function (err, req, res, next) {
 
 
 
-const port = 5000;
+const port = process.env.PORT ? parseInt(process.env.PORT, 10) : (process.env.NODE_ENV === 'test' ? 0 : 5000);
 
 
 var server = app.listen(port, () => {

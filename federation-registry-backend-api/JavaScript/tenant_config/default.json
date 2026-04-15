@@ -54,7 +54,7 @@
         "service_description": {
           "description" : "Human-readable text description, plain text format (max 255 characters) (This information will be shown in the Consent Page)"
         },
-        "service_description_czech": {
+        "service_description_localized": {
           "description" : "Human-readable text description in Czech, plain text format (max 255 characters)."
         },
         "client_id":{
@@ -69,13 +69,13 @@
         "service_name": {
           "description": "Human-readable application name. (This information will be shown in the Consent Page)"
         },
-        "service_name_czech": {
+        "service_name_localized": {
           "description": "Human-readable application name in Czech."
         },
         "service_login_url": {
           "description": "Homepage or login page of your service where the AAI login button is visible for users to start authentication."
         },
-        "service_login_url_czech": {
+        "service_login_url_localized": {
           "description": "Homepage or login page of your service where the AAI login button is visible for users to start authentication."
         },
         "service_policies": {

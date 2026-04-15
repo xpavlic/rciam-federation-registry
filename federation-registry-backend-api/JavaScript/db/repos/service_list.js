@@ -1,4 +1,5 @@
 const sql = require('../sql').service_list;
+const {withLocalizedAliases} = require('../../functions/localizedFields');
 
 const select_own_service_1 = "(SELECT id AS group_id,true AS owned,CASE WHEN group_manager IS NULL then false ELSE group_manager END FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='"
 const select_own_service_2 = "') AS group_ids LEFT JOIN";
@@ -176,7 +177,7 @@ class ServiceListRepository {
       params.offset = 0;
     }
     const query = this.pgp.as.format(sql.getList,params);
-    return await this.db.any(query);
+    return await this.db.any(query).then((rows)=> rows.map((row)=> withLocalizedAliases(row)));
 
 
   }

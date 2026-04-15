@@ -132,7 +132,7 @@ const ServiceForm = (props)=> {
       .map((item)=>({
         name: item.name,
         url: item.url,
-        url_czech: typeof item.url_czech === 'string' && item.url_czech ? item.url_czech : item.url
+        url_localized: typeof item.url_localized === 'string' && item.url_localized ? item.url_localized : item.url
       }));
   };
 
@@ -140,27 +140,27 @@ const ServiceForm = (props)=> {
     const normalized = normalizePolicyValues(policies);
     return {
       service_policies: normalized.map((item)=>({name: item.name, url: item.url})),
-      service_policies_czech: normalized.map((item)=>({name: item.name, url: item.url_czech}))
+      service_policies_localized: normalized.map((item)=>({name: item.name, url: item.url_localized}))
     };
   };
 
-  const mergePolicyValuesForApi = (englishPolicies, czechPolicies)=>{
+  const mergePolicyValuesForApi = (englishPolicies, localizedPolicies)=>{
     const englishByType = {};
-    const czechByType = {};
+    const localizedByType = {};
 
     normalizePolicyValues(englishPolicies).forEach((item)=>{
       englishByType[item.name] = item.url;
     });
-    normalizePolicyValues(czechPolicies).forEach((item)=>{
-      czechByType[item.name] = item.url;
+    normalizePolicyValues(localizedPolicies).forEach((item)=>{
+      localizedByType[item.name] = item.url;
     });
 
-    const policyTypes = Array.from(new Set([...Object.keys(englishByType), ...Object.keys(czechByType)]));
+    const policyTypes = Array.from(new Set([...Object.keys(englishByType), ...Object.keys(localizedByType)]));
     return policyTypes
       .map((name)=>{
-        const url = englishByType[name] || czechByType[name];
-        const url_czech = czechByType[name] || englishByType[name];
-        return {name, url, url_czech};
+        const url = englishByType[name] || localizedByType[name];
+        const url_localized = localizedByType[name] || englishByType[name];
+        return {name, url, url_localized};
       })
       .filter((item)=>item.name && item.url);
   };
@@ -255,12 +255,12 @@ const ServiceForm = (props)=> {
 
     const splitPolicies = splitPolicyValuesForForm(nextInitial.service_policies);
     nextInitial.service_policies = splitPolicies.service_policies;
-    if(Array.isArray(nextInitial.service_policies_czech) && nextInitial.service_policies_czech.length > 0){
-      nextInitial.service_policies_czech = normalizePolicyValues(nextInitial.service_policies_czech)
+    if(Array.isArray(nextInitial.service_policies_localized) && nextInitial.service_policies_localized.length > 0){
+      nextInitial.service_policies_localized = normalizePolicyValues(nextInitial.service_policies_localized)
         .map((item)=>({name: item.name, url: item.url}));
     }
     else{
-      nextInitial.service_policies_czech = splitPolicies.service_policies_czech;
+      nextInitial.service_policies_localized = splitPolicies.service_policies_localized;
     }
 
     if(nextInitial.protocol === 'oidc'){
@@ -454,10 +454,10 @@ const ServiceForm = (props)=> {
 
   const schema = yup.object({
     service_name:yup.string().nullable().min(4,t('yup_char_min') + ' ('+4+')').max(55,t('yup_char_max') + ' ('+55+')').required(t('yup_required')),
-    service_name_czech:yup.string().nullable().min(4,t('yup_char_min') + ' ('+4+')').max(55,t('yup_char_max') + ' ('+55+')').required(t('yup_required')),
+    service_name_localized:yup.string().nullable().min(4,t('yup_char_min') + ' ('+4+')').max(55,t('yup_char_max') + ' ('+55+')').required(t('yup_required')),
     // Every time client_id changes we make a fetch request to see if it is available.
     service_login_url:yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
-    service_login_url_czech:yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
+    service_login_url_localized:yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
     client_id:yup.string().nullable().when('protocol',{
       is:'oidc',
       then: yup.string().nullable().test('testClientIdFormat','Client Id can contain only numbers, letters and the special characters  "$-_.+!*\'(),"',function(value){
@@ -646,7 +646,7 @@ const ServiceForm = (props)=> {
       otherwise: yup.string().nullable(),
     }),
     service_description:yup.string().nullable().required(t('yup_required')).max(255,'Exceeded maximum characters (255)'),
-    service_description_czech:yup.string().nullable().required(t('yup_required')).max(255,'Exceeded maximum characters (255)'),
+    service_description_localized:yup.string().nullable().required(t('yup_required')).max(255,'Exceeded maximum characters (255)'),
     infrastructures: yup.array().nullable().when('integration_environment', {
       is: (integration_environment) => tenant.form_config.extra_fields.infrastructures?.required.includes(integration_environment) || false,
       then: yup.array().min(1, 'Select at least one infrastructure').of(yup.string()),
@@ -658,10 +658,10 @@ const ServiceForm = (props)=> {
       }
       const uniqueTypes = new Set(value.map((item)=>item.name));
       return uniqueTypes.size === value.length;
-    }).test('testPolicyTypesMatchCzech','Policy types must match in both language sections',function(value){
-      return hasSamePolicyTypes(value, this.parent.service_policies_czech);
+    }).test('testPolicyTypesMatchLocalized','Policy types must match in both language sections',function(value){
+      return hasSamePolicyTypes(value, this.parent.service_policies_localized);
     }),
-    service_policies_czech:yup.array().nullable().min(1,t('yup_required')).required(t('yup_required')).of(policySchema).test('testPolicyTypesUniqueCzech','Policy type must be unique',function(value){
+    service_policies_localized:yup.array().nullable().min(1,t('yup_required')).required(t('yup_required')).of(policySchema).test('testPolicyTypesUniqueLocalized','Policy type must be unique',function(value){
       if(!value){
         return true;
       }
@@ -1210,12 +1210,12 @@ const ServiceForm = (props)=> {
 
   const postApi= async (data)=>{
     data = generateValues(data);
-    data.service_policies = mergePolicyValuesForApi(data.service_policies, data.service_policies_czech);
-    delete data.service_policies_czech;
+    data.service_policies = mergePolicyValuesForApi(data.service_policies, data.service_policies_localized);
+    delete data.service_policies_localized;
     // Ensure optional fields are initialized with default empty values to satisfy backend type expectations
     if (!data.hasOwnProperty('infrastructures')) data.infrastructures = [];
     if (!data.hasOwnProperty('service_login_url')) data.service_login_url = '';
-    if (!data.hasOwnProperty('service_login_url_czech')) data.service_login_url_czech = '';
+    if (!data.hasOwnProperty('service_login_url_localized')) data.service_login_url_localized = '';
     
     let organization_id;
     if(!tenant.form_config.extra_fields.organization.hide.includes(data.integration_environment)){
@@ -1390,8 +1390,8 @@ const ServiceForm = (props)=> {
                         title={t('form_service_name')} 
                         required={true} 
                         description={t('form_service_name_desc')} 
-                                            error={(errors.service_name || errors.service_name_czech) ? t('form_service_name_bilingual_error') : null} 
-                        touched={touched.service_name || touched.service_name_czech}
+                                            error={(errors.service_name || errors.service_name_localized) ? t('form_service_name_bilingual_error') : null} 
+                        touched={touched.service_name || touched.service_name_localized}
                       >
                         {/* English Input */}
                         <div className="d-flex align-items-start mb-2">
@@ -1410,19 +1410,19 @@ const ServiceForm = (props)=> {
                           </div>
                         </div>
 
-                        {/* Czech Input */}
+                        {/* Localized Input */}
                         <div className="d-flex align-items-start">
                           <span className="badge bg-secondary me-2 mt-2" style={{minWidth: '35px', marginRight: '12px'}}>CS</span>
                           <div className="flex-grow-1">
                             <SimpleInput
-                              name='service_name_czech'
-                              placeholder={t('form_service_name_czech_placeholder')}
+                              name='service_name_localized'
+                              placeholder={t('form_service_name_localized_placeholder')}
                               onChange={handleChange}
-                              value={values.service_name_czech || ''}
-                              isInvalid={hasSubmitted ? !!errors.service_name_czech : (!!errors.service_name_czech && touched.service_name_czech)}
+                              value={values.service_name_localized || ''}
+                              isInvalid={hasSubmitted ? !!errors.service_name_localized : (!!errors.service_name_localized && touched.service_name_localized)}
                               onBlur={handleBlur}
                               disabled={disabled}
-                              changed={props.changes ? props.changes.service_name_czech : null}
+                              changed={props.changes ? props.changes.service_name_localized : null}
                             />
                           </div>
                         </div>
@@ -1433,8 +1433,8 @@ const ServiceForm = (props)=> {
                       title={t('form_description')} 
                       required={true} 
                       description={t('form_description_desc')} 
-                      error={(errors.service_description || errors.service_description_czech) ? t('form_service_description_bilingual_error') : null} 
-                      touched={touched.service_description || touched.service_description_czech}
+                      error={(errors.service_description || errors.service_description_localized) ? t('form_service_description_bilingual_error') : null} 
+                      touched={touched.service_description || touched.service_description_localized}
                     >
                       {/* English Input */}
                       <div className="d-flex align-items-start mb-3">
@@ -1453,19 +1453,19 @@ const ServiceForm = (props)=> {
                         </div>
                       </div>
 
-                      {/* Czech Input */}
+                      {/* Localized Input */}
                       <div className="d-flex align-items-start">
                         <span className="badge bg-secondary me-2 mt-2" style={{minWidth: '35px', marginRight: '12px'}}>CS</span>
                         <div className="flex-grow-1">
                           <TextAria
-                            value={values.service_description_czech ? values.service_description_czech : ''}
+                            value={values.service_description_localized ? values.service_description_localized : ''}
                             onChange={handleChange}
                             onBlur={handleBlur}
-                            name='service_description_czech'
-                            placeholder={t('form_service_description_czech_placeholder')}
-                            isInvalid={hasSubmitted ? !!errors.service_description_czech : (!!errors.service_description_czech && touched.service_description_czech)}
+                            name='service_description_localized'
+                            placeholder={t('form_service_description_localized_placeholder')}
+                            isInvalid={hasSubmitted ? !!errors.service_description_localized : (!!errors.service_description_localized && touched.service_description_localized)}
                             disabled={disabled}
-                            changed={props.changes ? props.changes.service_description_czech : null}
+                            changed={props.changes ? props.changes.service_description_localized : null}
                           />
                         </div>
                       </div>
@@ -1476,8 +1476,8 @@ const ServiceForm = (props)=> {
                       title={t('form_service_login_url')} 
                       required={true}
                       description={tenant.form_config.more_info.service_login_url?.description}
-                      error={errors.service_login_url || errors.service_login_url_czech ? t('form_service_login_url_bilingual_error') : null}
-                      touched={touched.service_login_url || touched.service_login_url_czech}
+                      error={errors.service_login_url || errors.service_login_url_localized ? t('form_service_login_url_bilingual_error') : null}
+                      touched={touched.service_login_url || touched.service_login_url_localized}
                     >
                       {/* English Input */}
                       <div className="d-flex align-items-start mb-3">
@@ -1497,21 +1497,21 @@ const ServiceForm = (props)=> {
                         </div>
                       </div>
 
-                      {/* Czech Input */}
+                      {/* Localized Input */}
                       <div className="d-flex align-items-start">
                         <span className="badge bg-secondary me-2 mt-2" style={{minWidth: '35px', marginRight: '12px'}}>CS</span>
                         <div className="flex-grow-1">
                           <SimpleInput
-                            name='service_login_url_czech'
+                            name='service_login_url_localized'
                             placeholder={t('form_url_placeholder')}
                             onChange={handleChange}
-                            value={values.service_login_url_czech || ''}
-                            isInvalid={hasSubmitted ? !!errors.service_login_url_czech : (!!errors.service_login_url_czech && touched.service_login_url_czech)}
+                            value={values.service_login_url_localized || ''}
+                            isInvalid={hasSubmitted ? !!errors.service_login_url_localized : (!!errors.service_login_url_localized && touched.service_login_url_localized)}
                             onBlur={handleBlur}
                             disabled={disabled}
-                            changed={props.changes ? props.changes.service_login_url_czech : null}
+                            changed={props.changes ? props.changes.service_login_url_localized : null}
                           />
-                          <UrlWarning url={values.service_login_url_czech} touched={hasSubmitted || touched.service_login_url_czech}/>
+                          <UrlWarning url={values.service_login_url_localized} touched={hasSubmitted || touched.service_login_url_localized}/>
                         </div>
                       </div>
                     </InputRow>
@@ -1581,8 +1581,8 @@ const ServiceForm = (props)=> {
                     moreInfo={tenant.form_config.more_info.service_policies} 
                     title={t('form_service_policies_title')} 
                     required={true} 
-                    error={Array.isArray(errors.service_policies) || Array.isArray(errors.service_policies_czech) ? t('form_service_policies_bilingual_error') : ''} 
-                    touched={touched.service_policies || touched.service_policies_czech} 
+                    error={Array.isArray(errors.service_policies) || Array.isArray(errors.service_policies_localized) ? t('form_service_policies_bilingual_error') : ''} 
+                    touched={touched.service_policies || touched.service_policies_localized} 
                     description={t('form_service_policies_desc')}
                   >
                     {/* English Input */}
@@ -1605,22 +1605,22 @@ const ServiceForm = (props)=> {
                       </div>
                     </div>
 
-                    {/* Czech Input */}
+                    {/* Localized Input */}
                     <div className="d-flex align-items-start">
                       <span className="badge bg-secondary me-2 mt-2" style={{minWidth: '35px', marginRight: '12px'}}>CS</span>
                       <div className="flex-grow-1">
                         <ServicePolicies
-                          values={values.service_policies_czech}
-                          name='service_policies_czech'
-                          empty={typeof(errors.service_policies_czech) === 'string'}
-                          error={errors.service_policies_czech}
-                          touched={touched.service_policies_czech}
+                          values={values.service_policies_localized}
+                          name='service_policies_localized'
+                          empty={typeof(errors.service_policies_localized) === 'string'}
+                          error={errors.service_policies_localized}
+                          touched={touched.service_policies_localized}
                           onChange={handleChange}
                           onBlur={handleBlur}
                           setFieldTouched={setFieldTouched}
                           disabled={disabled}
                           policyTypeOptions={policyTypeOptions}
-                          changed={props.changes ? props.changes.service_policies_czech : null}
+                          changed={props.changes ? props.changes.service_policies_localized : null}
                         />
                       </div>
                     </div>

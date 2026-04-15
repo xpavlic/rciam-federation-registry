@@ -1,6 +1,6 @@
-SELECT json_build_object('id',sd.id,'service_name', sd.service_name,'service_name_czech',sd.service_name_czech,'service_description',sd.service_description,'service_description_czech',sd.service_description_czech,
+SELECT json_build_object('id',sd.id,'service_name', sd.service_name,'service_name_localized',sd.service_name_localized,'service_description',sd.service_description,'service_description_localized',sd.service_description_localized,
 						 'logo_uri',sd.logo_uri,'integration_environment',sd.integration_environment,'protocol',sd.protocol,
-						 'country',sd.country,'service_login_url',sd.service_login_url,'service_login_url_czech',sd.service_login_url_czech,'tenant',sd.tenant,'aup_uri',sd.aup_uri,'organization_name',sd.name,
+						 'country',sd.country,'service_login_url',sd.service_login_url,'service_login_url_localized',sd.service_login_url_localized,'tenant',sd.tenant,'aup_uri',sd.aup_uri,'organization_name',sd.name,
 						 'organization_url',sd.url,'organization_id',sd.organization_id,${all_properties_filter:raw}
 						 'service_boolean',(SELECT CASE WHEN  json_object_agg(v.name,v.value) IS NULL THEN NULL ELSE  json_object_agg(v.name,v.value) END
 						 FROM service_boolean v WHERE sd.id = v.service_id),'created_at',created_at,
@@ -8,7 +8,7 @@ SELECT json_build_object('id',sd.id,'service_name', sd.service_name,'service_nam
 						 	(SELECT json_agg(json_build_object('email',v.value,'type',v.type))
 							 FROM service_contacts v WHERE sd.id = v.owner_id),
 						 'service_policies',
-					 	(SELECT coalesce(json_agg(json_strip_nulls(json_build_object('name',v.name,'url',v.url,'url_czech',CASE WHEN v.url_czech IS NOT NULL AND v.url_czech <> v.url THEN v.url_czech ELSE NULL END))), '[]'::json)
+						(SELECT coalesce(json_agg(json_strip_nulls(json_build_object('name',v.name,'url',v.url,'url_localized',CASE WHEN (to_jsonb(v)->>'url_localized') IS NOT NULL AND (to_jsonb(v)->>'url_localized') <> v.url THEN (to_jsonb(v)->>'url_localized') ELSE NULL END))), '[]'::json)
 						 	 FROM service_policies v WHERE sd.id = v.owner_id),
 						 'infrastructures',
 						 	(SELECT CASE WHEN array_agg((v.value)) IS NULL THEN Array[]::varchar[] ELSE array_agg((v.value)) END

@@ -98,8 +98,8 @@ describe('Service registry API Integration Tests', function() {
         expect(res.statusCode).to.equal(200);
         expect(body.petition.post_logout_redirect_uris).to.eql(['https://logout.example.com/callback']);
         expect(body.petition.resource_indicators).to.eql(['https://resource.example.com/api']);
-        expect(body.petition.service_name_czech).to.be.a('string');
-        expect(body.petition.service_description_czech).to.be.a('string');
+        expect(body.petition.service_name_localized).to.be.a('string');
+        expect(body.petition.service_description_localized).to.be.a('string');
         expect(body.petition.infrastructures).to.eql(['EOSC']);
         expect(body.petition.service_policies).to.be.an('array');
         expect(body.petition.check_group_membership).to.equal(true);
@@ -1034,6 +1034,8 @@ describe('Service registry API Integration Tests', function() {
     })
   });
   describe('# Test Banner Alert', function(){
+    let bannerAlertId;
+
     it('should fail to create new banner alert null body',function(done){
       var req = request(server).post('/tenants/tenant_1/banner_alert').set('X-Api-Key',process.env.ADMIN_AUTH_KEY).send({});
       req.set('Accept','application/json')
@@ -1057,10 +1059,13 @@ describe('Service registry API Integration Tests', function() {
       .expect(200)
       .end(function(err,res){
         expect(res.statusCode).to.equal(200);
+        const match = res.text && res.text.match(/id:(\d+)/);
+        expect(match).to.not.equal(null);
+        bannerAlertId = match ? match[1] : undefined;
         done();});
     });
     it('should update banner alert',function(done){
-      var req = request(server).put('/tenants/tenant_1/banner_alert/1').set('X-Api-Key',process.env.ADMIN_AUTH_KEY).send({
+      var req = request(server).put('/tenants/tenant_1/banner_alert/' + bannerAlertId).set('X-Api-Key',process.env.ADMIN_AUTH_KEY).send({
         "alert_message": "test_alert update",
         "active": false
       });
@@ -1081,7 +1086,7 @@ describe('Service registry API Integration Tests', function() {
         done();});
     });
     it('should delete banner', function(done){
-      var req = request(server).delete('/tenants/tenant_1/banner_alert/1').set('X-Api-Key',process.env.ADMIN_AUTH_KEY);
+      var req = request(server).delete('/tenants/tenant_1/banner_alert/' + bannerAlertId).set('X-Api-Key',process.env.ADMIN_AUTH_KEY);
       req.set('Accept','application/json')
       .expect('Content-Type',/json/)
       .expect(200)

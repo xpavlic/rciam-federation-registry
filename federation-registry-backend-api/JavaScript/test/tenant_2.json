@@ -72,6 +72,7 @@
         "country": {
             "required": []
         },
+        "description": {
           "description": "Website URL for information about the service (This information will be shown in the Consent Page)"
         },
         "service_description": {

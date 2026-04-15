@@ -1,10 +1,10 @@
-SELECT json_build_object('service_name', sd.service_name,'service_name_czech',sd.service_name_czech,'service_description',sd.service_description,'service_description_czech',sd.service_description_czech,
+SELECT json_build_object('service_name', sd.service_name,'service_name_localized',sd.service_name_localized,'service_description',sd.service_description,'service_description_localized',sd.service_description_localized,
 						 'logo_uri',sd.logo_uri,'integration_environment',sd.integration_environment,
 						 'client_id',sd.client_id,'allow_introspection',sd.allow_introspection,'code_challenge_method',sd.code_challenge_method,
 						 'device_code_validity_seconds',sd.device_code_validity_seconds,'access_token_validity_seconds',sd.access_token_validity_seconds,
 						 'refresh_token_validity_seconds',sd.refresh_token_validity_seconds,'refresh_token_validity_seconds',sd.refresh_token_validity_seconds,
 						 'client_secret',sd.client_secret,'reuse_refresh_token',sd.reuse_refresh_token,'protocol',sd.protocol,'jwks',sd.jwks,'jwks_uri',sd.jwks_uri,
-						 'country',sd.country,'service_login_url',sd.service_login_url,'service_login_url_czech',sd.service_login_url_czech,'token_endpoint_auth_method',sd.token_endpoint_auth_method,'token_endpoint_auth_signing_alg',sd.token_endpoint_auth_signing_alg,
+						 'country',sd.country,'service_login_url',sd.service_login_url,'service_login_url_localized',sd.service_login_url_localized,'token_endpoint_auth_method',sd.token_endpoint_auth_method,'token_endpoint_auth_signing_alg',sd.token_endpoint_auth_signing_alg,
 						 'clear_access_tokens_on_refresh',sd.clear_access_tokens_on_refresh,'id_token_timeout_seconds',sd.id_token_timeout_seconds,'metadata_url',sd.metadata_url,
 						 'entity_id',sd.entity_id,'assertion_consumer_service',sd.assertion_consumer_service,'single_logout_service',sd.single_logout_service,'signing_cert',sd.signing_cert,
 						 'check_group_membership',sd.check_group_membership,'require_vo_membership',sd.require_vo_membership,'rp_ensure_membership_desc',sd.rp_ensure_membership_desc,
@@ -38,8 +38,8 @@ SELECT json_build_object('service_name', sd.service_name,'service_name_czech',sd
 						 	(SELECT json_agg(json_build_object('email',v.value,'type',v.type))
 							 FROM service_petition_contacts v WHERE sd.id = v.owner_id),
 						 'service_policies',
-					 	(SELECT coalesce(json_agg(json_strip_nulls(json_build_object('name',v.name,'url',v.url,'url_czech',CASE WHEN v.url_czech IS NOT NULL AND v.url_czech <> v.url THEN v.url_czech ELSE NULL END))), '[]'::json)
-						 	 FROM service_petition_policies v WHERE sd.id = v.owner_id),
+				 	(SELECT coalesce(json_agg(json_strip_nulls(json_build_object('name',v.name,'url',v.url,'url_localized',CASE WHEN (to_jsonb(v)->>'url_localized') IS NOT NULL AND (to_jsonb(v)->>'url_localized') <> v.url THEN (to_jsonb(v)->>'url_localized') ELSE NULL END))), '[]'::json)
+					 	 FROM service_petition_policies v WHERE sd.id = v.owner_id),
 						 'infrastructures',
 						 	(SELECT CASE WHEN array_agg((v.value)) IS NULL THEN Array[]::varchar[] ELSE array_agg((v.value)) END
 						 	 FROM service_petition_infrastructures v WHERE sd.id = v.owner_id),

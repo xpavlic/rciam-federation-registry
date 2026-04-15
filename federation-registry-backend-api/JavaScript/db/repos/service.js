@@ -1,6 +1,7 @@
 const sql = require('../sql').service;
 const {calcDiff,extractServiceBoolean} = require('../../functions/helpers.js');
 const {requiredDeployment} = require('../../functions/requiredDeployment.js');
+const {withLocalizedAliases} = require('../../functions/localizedFields');
 const cs = {}; // Reusable ColumnSet objects.
 var requested_attributes = require('../../tenant_config/requested_attributes.json')
 /*
@@ -22,6 +23,7 @@ class ServiceRepository {
         }).then(result => {
           if(result){
             let data = {};
+            result.json = withLocalizedAliases(result.json);
             result.json.generate_client_secret = false;
             data.service_data = extractServiceBoolean(result.json);
             return data
@@ -233,6 +235,7 @@ class ServiceRepository {
       if(services){        
         const res = [];
         for (let i = 0; i < services.length; i++) {
+          services[i].json = withLocalizedAliases(services[i].json);
           res.push(services[i].json);
         }
         return res;
@@ -249,6 +252,7 @@ class ServiceRepository {
     const query = this.pgp.as.format(sql.getPending);
     return this.db.any(query).then(services=>{
       services.forEach((service,index)=>{
+        service.json = withLocalizedAliases(service.json);
         if(service.json.protocol==='saml'&&service.json.requested_attributes&&service.json.requested_attributes.length>0){
           service.json.requested_attributes.forEach((attribute,attr_index)=>{      
             let match_index = requested_attributes.findIndex(x => x.friendly_name ===attribute.friendly_name)            

@@ -7,6 +7,7 @@ nodeMailer = require('nodemailer');
 var config = require('../config');
 var email_transport_conf = require('../email_transport_conf.json')
 const customLogger = require('../loggers.js');
+const {getLocalizedPolicyUrlField, withLocalizedPolicyAliases} = require('./localizedFields');
 
 hbs.registerHelper('loud', function (aString) {
     return aString.toUpperCase()
@@ -45,6 +46,7 @@ const sendMultipleInvitations = function (data,t) {
 
 
 const calcDiff = (oldState,newState,tenant) => {
+  const localizedPolicyUrlField = getLocalizedPolicyUrlField();
   
     var new_values = Object.assign({},newState);
     var old_values = Object.assign({},oldState);
@@ -98,25 +100,27 @@ const calcDiff = (oldState,newState,tenant) => {
     let new_policies = [];
     let old_policies = [];
     new_values.service_policies.forEach(item=>{
-      const url_czech = item.url_czech || item.url;
-      new_policies.push(item.name+'|||'+item.url+'|||'+url_czech);
+      const normalizedPolicy = withLocalizedPolicyAliases({...item});
+      const localizedUrl = normalizedPolicy[localizedPolicyUrlField] || normalizedPolicy.url;
+      new_policies.push(normalizedPolicy.name+'|||'+normalizedPolicy.url+'|||'+localizedUrl);
     });
     old_values.service_policies.forEach(item=>{
-      const url_czech = item.url_czech || item.url;
-      old_policies.push(item.name+'|||'+item.url+'|||'+url_czech);
+      const normalizedPolicy = withLocalizedPolicyAliases({...item});
+      const localizedUrl = normalizedPolicy[localizedPolicyUrlField] || normalizedPolicy.url;
+      old_policies.push(normalizedPolicy.name+'|||'+normalizedPolicy.url+'|||'+localizedUrl);
     });
     edits.add.service_policies = new_policies.filter(x=>!old_policies.includes(x));
     edits.dlt.service_policies = old_policies.filter(x=>!new_policies.includes(x));
     if(edits.add.service_policies.length>0){
       edits.add.service_policies.forEach((item,index)=>{
         items = item.split('|||');
-        edits.add.service_policies[index] = {name:items[0],url:items[1],url_czech:items[2] || items[1]};
+        edits.add.service_policies[index] = {name:items[0],url:items[1],[localizedPolicyUrlField]:items[2] || items[1]};
       })
     }
     if(edits.dlt.service_policies.length>0){
       edits.dlt.service_policies.forEach((item,index)=>{
         items = item.split('|||');
-        edits.dlt.service_policies[index] = {name:items[0],url:items[1],url_czech:items[2] || items[1]};
+        edits.dlt.service_policies[index] = {name:items[0],url:items[1],[localizedPolicyUrlField]:items[2] || items[1]};
       })
     }
     if(!old_values.infrastructures){

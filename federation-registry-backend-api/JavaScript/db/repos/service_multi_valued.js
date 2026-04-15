@@ -183,7 +183,7 @@ async updateSamlAttributes(type,data,service_id){
           return 'success'
       })
       .catch(error => {
-          return 'error'
+          throw error
       });
     }
     else{

@@ -3,6 +3,7 @@ const { body,query, validationResult,param } = require('express-validator');
 const {reg} = require('./regex.js');
 const customLogger = require('./loggers.js');
 var config = require('./config');
+const {withLocalizedAliases, getLocalizedColumns, getLocalizedLanguage, getLocalizedPolicyUrlField, withLocalizedPolicyAliases} = require('./functions/localizedFields');
 var defaultAttributes = require('./tenant_config/requested_attributes.json');
 const {db} = require('./db');
 const e = require('express');
@@ -243,6 +244,10 @@ const validateSigningCertificate = (value) => {
 }
 
 const serviceValidationRules = (options,req) => {
+  const localizedColumns = getLocalizedColumns();
+  const localizedLanguage = getLocalizedLanguage();
+  const localizedLanguageLabel = localizedLanguage.charAt(0).toUpperCase() + localizedLanguage.slice(1);
+  const localizedPolicyUrlField = getLocalizedPolicyUrlField();
 
   const append_error = (value,req,pos,field,error) => {
     if(!Array.isArray(req.outdated_errors)){
@@ -341,10 +346,16 @@ const serviceValidationRules = (options,req) => {
 
 
     return [
+      body().customSanitizer((services) => {
+        if (!Array.isArray(services)) {
+          return services;
+        }
+        return services.map((service) => withLocalizedAliases(service));
+      }),
       body().isArray({min:1}).withMessage('Body must be an array containing at least one service'),
       body('*.tenant').custom((value,{req,location,path})=>{if(options.tenant_param||req.body[path.match(/\[(.*?)\]/)[1]].tenant in tenant_config){return true}else{return false}}).withMessage('Invalid Tenant'),
       body('*.service_name').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_name')}).withMessage('Service name missing').if((value,{req,location,path})=> { return value}).isString().withMessage('Service name must be a string').isLength({min:4, max:55}).withMessage('Service name must be from 4 up to 55 characters'),
-      body('*.service_name_czech').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_name_czech')}).withMessage('Service name (Czech) missing').if((value)=> {return value}).isString().withMessage('Service name (Czech) must be a string').isLength({min:4, max:55}).withMessage('Service name (Czech) must be from 4 up to 55 characters'),
+      body(`*.${localizedColumns.service_name}`).custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],localizedColumns.service_name)}).withMessage(`Service name (${localizedLanguageLabel}) missing`).if((value)=> {return value}).isString().withMessage(`Service name (${localizedLanguageLabel}) must be a string`).isLength({min:4, max:55}).withMessage(`Service name (${localizedLanguageLabel}) must be from 4 up to 55 characters`),
       body('*.country').custom((value,{req,location,path})=>{
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let integration_environment = req.body[path.match(/\[(.*?)\]/)[1]].integration_environment;
@@ -367,7 +378,7 @@ const serviceValidationRules = (options,req) => {
         }
       }).withMessage('Invalid Country Code'),
       body('*.service_description').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_description')}).withMessage('Service Description missing').if((value)=> {return value}).isString().withMessage('Service Description must be a string').isLength({min:1, max:255}).withMessage("Service description must be between 1 and 255 characters"),
-      body('*.service_description_czech').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_description_czech')}).withMessage('Service Description (Czech) missing').if((value)=> {return value}).isString().withMessage('Service Description (Czech) must be a string').isLength({min:1, max:255}).withMessage("Service description (Czech) must be between 1 and 255 characters"),
+      body(`*.${localizedColumns.service_description}`).custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],localizedColumns.service_description)}).withMessage(`Service Description (${localizedLanguageLabel}) missing`).if((value)=> {return value}).isString().withMessage(`Service Description (${localizedLanguageLabel}) must be a string`).isLength({min:1, max:255}).withMessage(`Service description (${localizedLanguageLabel}) must be between 1 and 255 characters`),
       body('*.logo_uri').optional({checkFalsy:true}).isString().withMessage('Service Logo must be a string').custom((value)=> value.match(reg.regUrl)).withMessage('Service Logo must be a secure url https://').isLength({max:256}).withMessage("Service logo cant exceed character limit (6000)"),
       body('*.requested_attributes').if((value)=> {
         return value&&(Array.isArray(value)&&value.length!==0)
@@ -445,14 +456,23 @@ const serviceValidationRules = (options,req) => {
             return false
           }
         }).withMessage('Client Id can contain only numbers, letters and the special characters  \"$-_.+!*\'(),\"').if(()=>{return options.check_available}).custom((value,{req,location,path})=> {
-          let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+          let pos = path.match(/\[(.*?)\]/)[1];
+          let tenant = options.tenant_param?req.params.tenant:req.body[pos].tenant;
+
+          const handleUnavailable = () => {
+            if(options.optional){
+              optionalError(value,req,pos,'client_id','Not available (' + value + ')');
+              return Promise.resolve();
+            }
+            return Promise.reject('Not available (' + value + ')');
+          };
 
           // Upadted by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) to check availability of client id when merging of integration
           // environments is enabled
           if ('merge_environments_on_deploy' in config && config.merge_environments_on_deploy) {
-            return db.service_details_protocol.checkClientIdAllEnvironments(value, 0, 0, tenant, req.body[path.match(/\[(.*?)\]/)[1]].integration_environment).then(available => {
+            return db.service_details_protocol.checkClientIdAllEnvironments(value, 0, 0, tenant, req.body[pos].integration_environment).then(available => {
               if (!available) {
-                return Promise.reject('Not available (' + value + ')');
+                return handleUnavailable();
               } else {
                 return Promise.resolve();
               }
@@ -460,7 +480,7 @@ const serviceValidationRules = (options,req) => {
           }
           return db.service_details_protocol.checkClientId(value, 0, 0, tenant).then(available => {
             if (!available) {
-              return Promise.reject('Not available (' + value + ')');
+              return handleUnavailable();
             } else {
               return Promise.resolve();
             }
@@ -945,7 +965,7 @@ const serviceValidationRules = (options,req) => {
         }
       }).optional({checkFalsy:true}).isString().withMessage('Must be a string').isLength({min:1, max:36}),
       body('*.service_login_url').optional({checkFalsy:true}).isString().withMessage('Service login url must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Service login url must be a valid url'),
-      body('*.service_login_url_czech').optional({checkFalsy:true}).isString().withMessage('Service login url (Czech) must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Service login url (Czech) must be a valid url'),
+      body(`*.${localizedColumns.service_login_url}`).optional({checkFalsy:true}).isString().withMessage(`Service login url (${localizedLanguageLabel}) must be a string`).custom((value)=> value.match(reg.regSimpleUrl)).withMessage(`Service login url (${localizedLanguageLabel}) must be a valid url`),
       body('*.infrastructures').optional({checkFalsy:true}).custom((value,{req,location,path})=>{
         let pos = path.match(/\[(.*?)\]/)[1];
         let tenant = options.tenant_param?req.params.tenant:req.body[pos].tenant;
@@ -969,19 +989,20 @@ const serviceValidationRules = (options,req) => {
       body('*.service_policies').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_policies')}).withMessage('Service policies missing').if((value)=> {return value}).isArray({min:1}).withMessage('Service policies must be a non-empty array').custom((value)=>{
         let success = true;
         value.forEach(item=>{
-          if(!item||typeof(item.name)!=='string'||typeof(item.url)!=='string'){
+          const normalizedPolicy = item ? withLocalizedPolicyAliases(item) : item;
+          if(!normalizedPolicy||typeof(normalizedPolicy.name)!=='string'||typeof(normalizedPolicy.url)!=='string'){
             success = false;
           }
-          if(item && (item.url_czech === undefined || item.url_czech === null || item.url_czech === '')){
-            item.url_czech = item.url;
+          if(normalizedPolicy && (normalizedPolicy[localizedPolicyUrlField] === undefined || normalizedPolicy[localizedPolicyUrlField] === null || normalizedPolicy[localizedPolicyUrlField] === '')){
+            normalizedPolicy[localizedPolicyUrlField] = normalizedPolicy.url;
           }
-          if(!item.name||!item.url||!item.url.match(reg.regSimpleUrl)){
+          if(!normalizedPolicy.name||!normalizedPolicy.url||!normalizedPolicy.url.match(reg.regSimpleUrl)){
             success = false;
           }
-          if(item && typeof(item.url_czech)!=='string'){
+          if(normalizedPolicy && typeof(normalizedPolicy[localizedPolicyUrlField])!=='string'){
             success = false;
           }
-          if(item && item.url_czech && !item.url_czech.match(reg.regSimpleUrl)){
+          if(normalizedPolicy && normalizedPolicy[localizedPolicyUrlField] && !normalizedPolicy[localizedPolicyUrlField].match(reg.regSimpleUrl)){
             success = false;
           }
         });

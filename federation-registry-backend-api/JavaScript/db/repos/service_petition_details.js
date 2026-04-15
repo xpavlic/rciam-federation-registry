@@ -1,5 +1,6 @@
 const sql = require('../sql').service_petition_details;
 var config = require('../../config');
+const {getLocalizedColumns, getLocalizedLanguage, withLocalizedAliases, extractLocalizedPayload} = require('../../functions/localizedFields');
 const cs = {}; // Reusable ColumnSet objects.
 
 /*
@@ -10,6 +11,7 @@ class ServicePetitionDetailsRepository {
     constructor(db, pgp) {
         this.db = db;
         this.pgp = pgp;
+    this._petitionLocalizationTableAvailable = null;
         // set-up all ColumnSet objects, if needed:
         createColumnsets(pgp);
     }
@@ -18,65 +20,103 @@ class ServicePetitionDetailsRepository {
 
     // Save new Petition
     async add(body,sub){
+      const localizedColumns = getLocalizedColumns();
+      const normalized = withLocalizedAliases({...body});
       return this.db.one(sql.add,{
-        service_description: body.service_description,
-        service_description_czech: body.service_description_czech,
-        service_name: body.service_name,
-        service_name_czech: body.service_name_czech,
-        logo_uri: body.logo_uri,
-        integration_environment: body.integration_environment,
+        service_description: normalized.service_description,
+        [localizedColumns.service_description]: normalized[localizedColumns.service_description],
+        service_name: normalized.service_name,
+        [localizedColumns.service_name]: normalized[localizedColumns.service_name],
+        logo_uri: normalized.logo_uri,
+        integration_environment: normalized.integration_environment,
         requester: sub,
-        country: body.country,
-        protocol:body.protocol,
-        group_id:body.group_id,
-        organization_id: body.organization_id,
-        aup_uri:body.aup_uri,
-        check_group_membership:body.check_group_membership,
-        require_vo_membership:body.require_vo_membership,
-        rp_ensure_membership_desc:body.rp_ensure_membership_desc,
-        require_group_membership:body.require_group_membership,
-        rp_ensure_group_membership_desc:body.rp_ensure_group_membership_desc,
-        create_group:body.create_group,
-        allow_registration:body.allow_registration,
-        dynamic_registration:body.dynamic_registration,
-        registration_url:body.registration_url,
-        service_login_url:body.service_login_url,
-        service_login_url_czech:body.service_login_url_czech,
-        tenant:body.tenant,
-        type:body.type,
-        status:(body.status?body.status:"pending"),
-        service_id:body.service_id,
-        comment:body.comment
+        country: normalized.country,
+        protocol:normalized.protocol,
+        group_id:normalized.group_id,
+        organization_id: normalized.organization_id,
+        aup_uri:normalized.aup_uri,
+        check_group_membership:normalized.check_group_membership,
+        require_vo_membership:normalized.require_vo_membership,
+        rp_ensure_membership_desc:normalized.rp_ensure_membership_desc,
+        require_group_membership:normalized.require_group_membership,
+        rp_ensure_group_membership_desc:normalized.rp_ensure_group_membership_desc,
+        create_group:normalized.create_group,
+        allow_registration:normalized.allow_registration,
+        dynamic_registration:normalized.dynamic_registration,
+        registration_url:normalized.registration_url,
+        service_login_url:normalized.service_login_url,
+        [localizedColumns.service_login_url]: normalized[localizedColumns.service_login_url],
+        tenant:normalized.tenant,
+        type:normalized.type,
+        status:(normalized.status?normalized.status:"pending"),
+        service_id:normalized.service_id,
+        comment:normalized.comment
+      }).then(async result => {
+        if (result && result.id) {
+          await this.syncLocalization(result.id, normalized);
+        }
+        return result;
       })
     }
 
     async update(body,id){
+        const localizedColumns = getLocalizedColumns();
+        const normalized = withLocalizedAliases({...body});
         return this.db.none(sql.update,{
-          service_description: body.service_description,
-          service_description_czech: body.service_description_czech,
-          service_name: body.service_name,
-          service_name_czech: body.service_name_czech,
-          logo_uri: body.logo_uri,
-          country: body.country,
-          integration_environment:body.integration_environment,
+          service_description: normalized.service_description,
+          [localizedColumns.service_description]: normalized[localizedColumns.service_description],
+          service_name: normalized.service_name,
+          [localizedColumns.service_name]: normalized[localizedColumns.service_name],
+          logo_uri: normalized.logo_uri,
+          country: normalized.country,
+          integration_environment:normalized.integration_environment,
           id:id,
-          type:body.type,
-          protocol:body.protocol,
-          check_group_membership:body.check_group_membership,
-          require_vo_membership:body.require_vo_membership,
-          rp_ensure_membership_desc:body.rp_ensure_membership_desc,
-          require_group_membership:body.require_group_membership,
-          rp_ensure_group_membership_desc:body.rp_ensure_group_membership_desc,
-          create_group:body.create_group,
-          allow_registration:body.allow_registration,
-          dynamic_registration:body.dynamic_registration,
-          registration_url:body.registration_url,
-          service_login_url:body.service_login_url,
-          service_login_url_czech:body.service_login_url_czech,
+          type:normalized.type,
+          protocol:normalized.protocol,
+          check_group_membership:normalized.check_group_membership,
+          require_vo_membership:normalized.require_vo_membership,
+          rp_ensure_membership_desc:normalized.rp_ensure_membership_desc,
+          require_group_membership:normalized.require_group_membership,
+          rp_ensure_group_membership_desc:normalized.rp_ensure_group_membership_desc,
+          create_group:normalized.create_group,
+          allow_registration:normalized.allow_registration,
+          dynamic_registration:normalized.dynamic_registration,
+          registration_url:normalized.registration_url,
+          service_login_url:normalized.service_login_url,
+          [localizedColumns.service_login_url]: normalized[localizedColumns.service_login_url],
           status:"pending",
-          aup_uri:body.aup_uri,
-          organization_id:body.organization_id
+          aup_uri:normalized.aup_uri,
+          organization_id:normalized.organization_id
+        }).then(async result => {
+          await this.syncLocalization(id, normalized);
+          return result;
         })
+    }
+
+    async syncLocalization(owner_id, data){
+      const hasTable = await this.hasPetitionLocalizationTable();
+      if (!hasTable) {
+        return null;
+      }
+      const payload = extractLocalizedPayload(data);
+      if (!payload) {
+        return null;
+      }
+      const query = "INSERT INTO service_petition_localizations (owner_id,language,service_name,service_description,service_login_url) VALUES (${owner_id},${language},${service_name},${service_description},${service_login_url}) ON CONFLICT (owner_id,language) DO UPDATE SET service_name=COALESCE(EXCLUDED.service_name,service_petition_localizations.service_name), service_description=COALESCE(EXCLUDED.service_description,service_petition_localizations.service_description), service_login_url=COALESCE(EXCLUDED.service_login_url,service_petition_localizations.service_login_url)";
+      return this.db.none(query, {
+        owner_id: +owner_id,
+        language: getLocalizedLanguage(),
+        ...payload,
+      });
+    }
+
+    async hasPetitionLocalizationTable(){
+      if (this._petitionLocalizationTableAvailable !== null) {
+        return this._petitionLocalizationTableAvailable;
+      }
+      const result = await this.db.one('SELECT to_regclass($1) AS table_name', ['service_petition_localizations']);
+      this._petitionLocalizationTableAvailable = !!(result && result.table_name);
+      return this._petitionLocalizationTableAvailable;
     }
 
     async getServiceId(petition_id){
@@ -217,9 +257,10 @@ function createColumnsets(pgp) {
         // Type TableName is useful when schema isn't default "public" ,
         // otherwise you can just pass in a string for the table name.
         const table = new pgp.helpers.TableName({table: 'service_petition_details', schema: 'public'});
+        const localizedColumns = getLocalizedColumns();
 
-        cs.insert = new pgp.helpers.ColumnSet(['service_description','service_description_czech','service_name','service_name_czech','country',
-                      'service_login_url','service_login_url_czech','logo_uri','integration_environment','requester','protocol','comment'],
+        cs.insert = new pgp.helpers.ColumnSet(['service_description',localizedColumns.service_description,'service_name',localizedColumns.service_name,'country',
+                'service_login_url',localizedColumns.service_login_url,'logo_uri','integration_environment','requester','protocol','comment'],
           {table});
         cs.update = cs.insert.extend(['?id','state','type','reviewed_at','reviewer','service_id']);
     }

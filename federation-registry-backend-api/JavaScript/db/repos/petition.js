@@ -1,5 +1,6 @@
 const sql = require('../sql').petition;
 const {calcDiff,extractServiceBoolean} = require('../../functions/helpers.js');
+const {withLocalizedAliases} = require('../../functions/localizedFields');
 const cs = {}; // Reusable ColumnSet objects.
 const {sendMail} = require('../../functions/helpers.js');
 /*
@@ -198,6 +199,7 @@ class PetitionRepository {
 
 const fixPetition = (result) => {
   let data = {};
+  result.json = withLocalizedAliases(result.json);
   result.json.generate_client_secret = false;
   data.meta_data = {};
   data.meta_data.type = result.json.type;

@@ -21,24 +21,23 @@ class ServiceContactsRepository {
 
   async add(type,data,id){
     let values = []
-    let date = new Date(Date.now());
     // if not Empty array
     let name = 'service_contacts';
     if(type==='petition'){
       name = 'service_petition_contacts'
     }
 
-    if(data.length>0){
+    if(data && data.length>0){
       data.forEach((item)=>{
         values.push({owner_id:id,value:item.email,type:item.type})
       });
       const query = this.pgp.helpers.insert(values,cs,name);
-      this.db.none(query)
+      return this.db.none(query)
       .then(data => {
           return 'success'
       })
       .catch(error => {
-          return 'error'
+          throw error
       });
     }
     else{
@@ -80,23 +79,6 @@ class ServiceContactsRepository {
       const table = new this.pgp.helpers.TableName({table:name});
       return this.db.none('DELETE FROM $1 WHERE owner_id=$2',[table,+owner_id]);
   }
-
-
-
-
-
- // Not implemented yet
-
-
-
-
-
-
-  // edit not yet implemented
-
-
-
-
 
 }
 

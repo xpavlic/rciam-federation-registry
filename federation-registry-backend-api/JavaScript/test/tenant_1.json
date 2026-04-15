@@ -80,6 +80,7 @@
             "country": {
                 "required": ["demo","production"]
             },
+            "description": {
             "description": "Website URL for information about the service (This information will be shown in the Consent Page)"
             },
             "service_description": {
@@ -100,7 +101,6 @@
             },
             "contacts": {
             "description": "List of contacts for administrators of this service. (Technical and Support Contacts will be shown in the Consent Page)"
-            },
             },
             "service_name": {
             "description": "Human-readable application name. (This information will be shown in the Consent Page)"

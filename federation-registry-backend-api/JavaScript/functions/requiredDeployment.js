@@ -1,5 +1,6 @@
 var config = require('../config');
 var diff = require('deep-diff').diff;
+const {getLocalizedPolicyUrlField, withLocalizedPolicyAliases} = require('./localizedFields');
 
 function requiredDeployment(old_values,new_values){
   let deploy = false;
@@ -51,6 +52,7 @@ function requiredDeployment(old_values,new_values){
   
 
   function calculateMultivalueDiff(old_values,new_values,edits){
+    const localizedPolicyUrlField = getLocalizedPolicyUrlField();
     let new_cont = [];
     let old_cont = [];
     let items;
@@ -89,20 +91,22 @@ function requiredDeployment(old_values,new_values){
       new_values.service_policies = [];
     }
     const oldPolicies = old_values.service_policies.map((item)=>{
-      const url_czech = item.url_czech || item.url;
-      return item.name + '|||' + item.url + '|||' + url_czech;
+      const normalizedPolicy = withLocalizedPolicyAliases({...item});
+      const localizedUrl = normalizedPolicy[localizedPolicyUrlField] || normalizedPolicy.url;
+      return normalizedPolicy.name + '|||' + normalizedPolicy.url + '|||' + localizedUrl;
     });
     const newPolicies = new_values.service_policies.map((item)=>{
-      const url_czech = item.url_czech || item.url;
-      return item.name + '|||' + item.url + '|||' + url_czech;
+      const normalizedPolicy = withLocalizedPolicyAliases({...item});
+      const localizedUrl = normalizedPolicy[localizedPolicyUrlField] || normalizedPolicy.url;
+      return normalizedPolicy.name + '|||' + normalizedPolicy.url + '|||' + localizedUrl;
     });
     edits.service_policies.N = newPolicies.filter(x=>!oldPolicies.includes(x)).map((item)=>{
       const values = item.split('|||');
-      return {name: values[0], url: values[1], url_czech: values[2] || values[1]};
+      return {name: values[0], url: values[1], [localizedPolicyUrlField]: values[2] || values[1]};
     });
     edits.service_policies.D = oldPolicies.filter(x=>!newPolicies.includes(x)).map((item)=>{
       const values = item.split('|||');
-      return {name: values[0], url: values[1], url_czech: values[2] || values[1]};
+      return {name: values[0], url: values[1], [localizedPolicyUrlField]: values[2] || values[1]};
     });
 
     if(new_values.protocol==='oidc'){

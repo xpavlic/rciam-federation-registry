@@ -1,5 +1,7 @@
 const {QueryFile} = require('pg-promise');
 const path = require('path');
+const fs = require('fs');
+const config = require('../../config');
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Criteria for deciding whether to place a particular query into an external SQL file or to
@@ -103,27 +105,37 @@ function sql(file) {
 
     const fullPath = path.join(__dirname, file); // generating full path;
 
-    const options = {
-        // minifying the SQL is always advised;
-        // see also option 'compress' in the API;
-        minify: true
-
-        // See also property 'params' for two-step template formatting
-    };
-
-    const qf = new QueryFile(fullPath, options);
-
-    if (qf.error) {
-        // Something is wrong with our query file :(
-        // Testing all files through queries can be cumbersome,
-        // so we also report it here, while loading the module:
-        console.error(qf.error);
+    try {
+      let sqlText = fs.readFileSync(fullPath, 'utf8');
+      sqlText = applyLocalizedColumnMapping(sqlText);
+      return sqlText;
+    } catch (error) {
+      console.error(error);
+      return new QueryFile(fullPath, {minify: true});
     }
-
-    return qf;
 
     // See QueryFile API:
     // http://vitaly-t.github.io/pg-promise/QueryFile.html
+}
+
+function applyLocalizedColumnMapping(sqlText) {
+  const replacements = {
+    service_name_localized: config.localized_service_fields.service_name,
+    service_description_localized: config.localized_service_fields.service_description,
+    service_login_url_localized: config.localized_service_fields.service_login_url,
+    url_localized: config.localized_policy_fields && config.localized_policy_fields.url,
+  };
+
+  let result = sqlText;
+  Object.keys(replacements).forEach((legacy) => {
+    const target = replacements[legacy];
+    if (!target || target === legacy) {
+      return;
+    }
+    result = result.replace(new RegExp(`\\b${legacy}\\b`, 'g'), target);
+  });
+
+  return result;
 }
 
 ///////////////////////////////////////////////////////////////////

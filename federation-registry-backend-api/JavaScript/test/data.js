@@ -4,12 +4,12 @@ const create = {
   oidc:{
      service_name:"Test Oidc Service",
      service_description:"This is a test service",
-     service_name_czech: "Testovací služba",
-     service_description_czech: "Toto je testovací popis",
+     service_name_localized: "Testovací služba",
+     service_description_localized: "Toto je testovací popis",
      service_policies: [{
         "name": "Privacy Policy",
         "url": "https://example.com/policy",
-        "url_czech": "https://example.com/cs/policy"
+        "url_localized": "https://example.com/cs/policy"
         }
      ],
      redirect_uris: ["https://redirecturi1.com"],
@@ -71,12 +71,12 @@ const create = {
    saml:{
      service_name:"Test Saml Service",
      service_description:"This is a test service",
-     service_name_czech: "Testovací služba",
-     service_description_czech: "Toto je testovací popis",
+     service_name_localized: "Testovací služba",
+     service_description_localized: "Toto je testovací popis",
      service_policies: [{
         "name": "Privacy Policy",
         "url": "https://example.com/policy",
-        "url_czech": "https://example.com/cs/policy"
+        "url_localized": "https://example.com/cs/policy"
         }
      ],
      redirect_uris: null,
@@ -124,12 +124,12 @@ const edit = {
  oidc:{
    "service_name":"Test Oidc Service",
    "service_description":"This is a test service edit",
-    "service_name_czech": "Testovací služba - zeditovana",
-    "service_description_czech": "Toto je zmenený testovací popis",
+    "service_name_localized": "Testovací služba - zeditovana",
+    "service_description_localized": "Toto je zmenený testovací popis",
     "service_policies": [{
       "name": "Privacy Policy",
       "url": "https://example.com/policy",
-      "url_czech": "https://example.com/cs/policy"
+      "url_localized": "https://example.com/cs/policy"
     }
     ],
    "redirect_uris":[
@@ -193,12 +193,12 @@ const edit = {
    "dpcoco":false
 },
  saml:{
-   service_name_czech: "Testovací služba",
-   service_description_czech: "Toto je testovací popis",
+   service_name_localized: "Testovací služba",
+   service_description_localized: "Toto je testovací popis",
    service_policies: [{
     "name": "Privacy Policy",
     "url": "https://example.com/policy",
-    "url_czech": "https://example.com/cs/policy"
+    "url_localized": "https://example.com/cs/policy"
     }
    ],
    service_name:"Test Saml Service edit",
